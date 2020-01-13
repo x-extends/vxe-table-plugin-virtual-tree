@@ -10,7 +10,7 @@
     factory(mod.exports, global.XEUtils);
     global.VXETablePluginVirtualTree = mod.exports.default;
   }
-})(this, function (_exports, _xeUtils) {
+})(typeof globalThis !== "undefined" ? globalThis : typeof self !== "undefined" ? self : this, function (_exports, _xeUtils) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -24,7 +24,7 @@
   function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
   function countTreeExpand($xTree, prevRow) {
-    var rowChildren = prevRow[$xTree.treeConfig.children];
+    var rowChildren = prevRow[$xTree.treeOpts.children];
     var count = 1;
 
     if ($xTree.isTreeExpandByRow(prevRow)) {
@@ -85,14 +85,22 @@
         vSize: function vSize() {
           return this.size || this.$parent.size || this.$parent.vSize;
         },
+        treeOpts: function treeOpts() {
+          return Object.assign({
+            children: 'children',
+            hasChild: 'hasChild',
+            indent: 20
+          }, GlobalConfig.treeConfig, this.treeConfig);
+        },
         renderClass: function renderClass() {
           var _ref2;
 
           var tableProps = this.tableProps,
               vSize = this.vSize,
               maximize = this.maximize,
-              treeConfig = this.treeConfig;
-          return ['vxe-grid vxe-virtual-tree', (_ref2 = {}, _defineProperty(_ref2, "size--".concat(vSize), vSize), _defineProperty(_ref2, 't--animat', tableProps.optimization.animat), _defineProperty(_ref2, 'has--tree-line', treeConfig && treeConfig.line), _defineProperty(_ref2, 'is--maximize', maximize), _ref2)];
+              treeConfig = this.treeConfig,
+              treeOpts = this.treeOpts;
+          return ['vxe-grid vxe-virtual-tree', (_ref2 = {}, _defineProperty(_ref2, "size--".concat(vSize), vSize), _defineProperty(_ref2, 't--animat', tableProps.optimization.animat), _defineProperty(_ref2, 'has--tree-line', treeConfig && treeOpts.line), _defineProperty(_ref2, 'is--maximize', maximize), _ref2)];
         },
         tableExtendProps: function tableExtendProps() {
           var _this = this;
@@ -128,40 +136,41 @@
       methods: {
         renderTreeLine: function renderTreeLine(params, h) {
           var treeConfig = this.treeConfig,
+              treeOpts = this.treeOpts,
               fullTreeRowMap = this.fullTreeRowMap;
           var $table = params.$table,
               row = params.row,
               column = params.column;
           var treeNode = column.treeNode;
 
-          if (treeNode && treeConfig && treeConfig.line) {
+          if (treeNode && treeConfig && treeOpts.line) {
             var $xTree = this;
             var rowLevel = row._X_LEVEL;
             var matchObj = fullTreeRowMap.get(row);
-            return [treeNode && treeConfig && treeConfig.line ? h('div', {
+            return [treeNode && treeOpts.line ? h('div', {
               "class": 'vxe-tree--line-wrapper'
             }, [h('div', {
               "class": 'vxe-tree--line',
               style: {
                 height: "".concat(calcTreeLine($table, $xTree, matchObj), "px"),
-                left: "".concat(rowLevel * (treeConfig.indent || 20) + (rowLevel ? 2 - getOffsetSize($xTree) : 0) + 16, "px")
+                left: "".concat(rowLevel * (treeOpts.indent || 20) + (rowLevel ? 2 - getOffsetSize($xTree) : 0) + 16, "px")
               }
             })]) : null];
           }
 
           return [];
         },
-        renderTreeIcon: function renderTreeIcon(params, h) {
+        renderTreeIcon: function renderTreeIcon(params, h, cellVNodes) {
           var _this2 = this;
 
           var isHidden = params.isHidden;
           var row = params.row;
-          var _this$treeConfig = this.treeConfig,
-              children = _this$treeConfig.children,
-              indent = _this$treeConfig.indent,
-              trigger = _this$treeConfig.trigger,
-              iconOpen = _this$treeConfig.iconOpen,
-              iconClose = _this$treeConfig.iconClose;
+          var _this$treeOpts = this.treeOpts,
+              children = _this$treeOpts.children,
+              indent = _this$treeOpts.indent,
+              trigger = _this$treeOpts.trigger,
+              iconOpen = _this$treeOpts.iconOpen,
+              iconClose = _this$treeOpts.iconClose;
           var rowChildren = row[children];
           var isAceived = false;
           var on = {};
@@ -176,21 +185,21 @@
             };
           }
 
-          return [h('span', {
-            "class": 'vxe-tree--indent',
-            style: {
-              width: "".concat(row._X_LEVEL * (indent || 20), "px")
-            }
-          }), h('span', {
-            "class": ['vxe-tree-wrapper', {
+          return [h('div', {
+            "class": ['vxe-cell--tree-node', {
               'is--active': isAceived
             }],
+            style: {
+              paddingLeft: "".concat(row._X_LEVEL * indent, "px")
+            }
+          }, [rowChildren && rowChildren.length ? [h('div', {
+            "class": 'vxe-tree--btn-wrapper',
             on: on
-          }, rowChildren && rowChildren.length ? [h('span', {
-            "class": 'vxe-tree--btn-wrapper'
           }, [h('i', {
             "class": ['vxe-tree--node-btn', isAceived ? iconOpen || GlobalConfig.icon.treeOpen : iconClose || GlobalConfig.icon.treeClose]
-          })])] : [])];
+          })])] : null, h('div', {
+            "class": 'vxe-tree-cell'
+          }, cellVNodes)])];
         },
         _loadTreeData: function _loadTreeData(data) {
           var _this3 = this;
@@ -243,7 +252,7 @@
             if (row._X_EXPAND && hasChilds(row)) {
               treeExpandRecords.push(row);
             }
-          }, this.treeConfig);
+          }, this.treeOpts);
 
           return treeExpandRecords;
         },
@@ -265,7 +274,7 @@
           });
         },
         hasChilds: function hasChilds(row) {
-          var childList = row[this.treeConfig.children];
+          var childList = row[this.treeOpts.children];
           return childList && childList.length;
         },
 
@@ -289,7 +298,7 @@
             if (row._X_INSERT) {
               insertRecords.push(row);
             }
-          }, this.treeConfig);
+          }, this.treeOpts);
 
           return insertRecords;
         },
@@ -301,7 +310,7 @@
 
           var fullTreeData = this.fullTreeData,
               tableData = this.tableData,
-              treeConfig = this.treeConfig;
+              treeOpts = this.treeOpts;
 
           if (!_xeUtils["default"].isArray(records)) {
             records = [records];
@@ -325,7 +334,7 @@
             } else {
               var matchObj = _xeUtils["default"].findTree(fullTreeData, function (item) {
                 return item === row;
-              }, treeConfig);
+              }, treeOpts);
 
               if (!matchObj || matchObj.index === -1) {
                 throw new Error(t('vxe.error.unableInsert'));
@@ -379,7 +388,7 @@
 
           var removeList = this.removeList,
               fullTreeData = this.fullTreeData,
-              treeConfig = this.treeConfig;
+              treeOpts = this.treeOpts;
           var rest = [];
 
           if (!rows) {
@@ -391,7 +400,7 @@
           rows.forEach(function (row) {
             var matchObj = _xeUtils["default"].findTree(fullTreeData, function (item) {
               return item === row;
-            }, treeConfig);
+            }, treeOpts);
 
             if (matchObj) {
               var item = matchObj.item,
@@ -441,12 +450,13 @@
           var _this10 = this;
 
           var treeConfig = this.treeConfig,
+              treeOpts = this.treeOpts,
               tableFullData = this.tableFullData;
 
           if (treeConfig) {
-            var expandAll = treeConfig.expandAll,
-                expandRowKeys = treeConfig.expandRowKeys;
-            var children = treeConfig.children;
+            var children = treeOpts.children,
+                expandAll = treeOpts.expandAll,
+                expandRowKeys = treeOpts.expandRowKeys;
 
             if (expandAll) {
               this.setAllTreeExpansion(true);
@@ -455,7 +465,7 @@
               expandRowKeys.forEach(function (rowid) {
                 var matchObj = _xeUtils["default"].findTree(tableFullData, function (item) {
                   return rowid === _xeUtils["default"].get(item, rowkey);
-                }, treeConfig);
+                }, treeOpts);
 
                 var rowChildren = matchObj ? matchObj.item[children] : 0;
 
@@ -511,8 +521,8 @@
         handleExpanding: function handleExpanding(row) {
           if (this.hasChilds(row)) {
             var tableData = this.tableData,
-                treeConfig = this.treeConfig;
-            var childRows = row[treeConfig.children];
+                treeOpts = this.treeOpts;
+            var childRows = row[treeOpts.children];
             var expandList = [];
             var rowIndex = tableData.indexOf(row);
 
@@ -524,7 +534,7 @@
               if (!parent || parent._X_EXPAND) {
                 expandList.push(item);
               }
-            }, treeConfig);
+            }, treeOpts);
 
             row._X_EXPAND = true;
             tableData.splice.apply(tableData, [rowIndex + 1, 0].concat(expandList));
@@ -536,13 +546,13 @@
         handleCollapsing: function handleCollapsing(row) {
           if (this.hasChilds(row)) {
             var tableData = this.tableData,
-                treeConfig = this.treeConfig;
-            var childRows = row[treeConfig.children];
+                treeOpts = this.treeOpts;
+            var childRows = row[treeOpts.children];
             var nodeChildList = [];
 
             _xeUtils["default"].eachTree(childRows, function (item) {
               nodeChildList.push(item);
-            }, treeConfig);
+            }, treeOpts);
 
             row._X_EXPAND = false;
             this.tableData = tableData.filter(function (item) {
@@ -561,7 +571,7 @@
 
           _xeUtils["default"].eachTree(this.fullTreeData, function (row) {
             _this11.virtualExpand(row, expanded);
-          }, this.treeConfig);
+          }, this.treeOpts);
 
           return this.tableData;
         }

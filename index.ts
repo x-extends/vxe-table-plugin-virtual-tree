@@ -1,8 +1,8 @@
 import XEUtils from 'xe-utils/methods/xe-utils'
 import VXETable from 'vxe-table/lib/vxe-table'
 
-function countTreeExpand($xTree: any, prevRow: any): number {
-  const rowChildren = prevRow[$xTree.treeConfig.children]
+function countTreeExpand ($xTree: any, prevRow: any): number {
+  const rowChildren = prevRow[$xTree.treeOpts.children]
   let count = 1
   if ($xTree.isTreeExpandByRow(prevRow)) {
     for (let index = 0; index < rowChildren.length; index++) {
@@ -12,7 +12,7 @@ function countTreeExpand($xTree: any, prevRow: any): number {
   return count
 }
 
-function getOffsetSize($xTree: any): number {
+function getOffsetSize ($xTree: any): number {
   switch ($xTree.vSize) {
     case 'mini':
       return 3
@@ -24,7 +24,7 @@ function getOffsetSize($xTree: any): number {
   return 0
 }
 
-function calcTreeLine($table: any, $xTree: any, matchObj: any): number {
+function calcTreeLine ($table: any, $xTree: any, matchObj: any): number {
   const { index, items } = matchObj
   let expandSize = 1
   if (index) {
@@ -33,33 +33,39 @@ function calcTreeLine($table: any, $xTree: any, matchObj: any): number {
   return $table.rowHeight * expandSize - (index ? 1 : (12 - getOffsetSize($xTree)))
 }
 
-function registerComponent({ Vue, Table, Grid, setup, t }: typeof VXETable) {
-
+function registerComponent ({ Vue, Table, Grid, setup, t }: typeof VXETable) {
   const GlobalConfig = setup()
   const propKeys = Object.keys(Table.props).filter(name => ['data', 'treeConfig'].indexOf(name) === -1)
 
   const VirtualTree: any = {
     name: 'VxeVirtualTree',
     extends: Grid,
-    data() {
+    data () {
       return {
         removeList: []
       }
     },
     computed: {
-      vSize(this: any): any {
+      vSize (this: any): any {
         return this.size || this.$parent.size || this.$parent.vSize
       },
-      renderClass(this: any): any {
-        const { tableProps, vSize, maximize, treeConfig } = this
+      treeOpts (this: any): any {
+        return Object.assign({
+          children: 'children',
+          hasChild: 'hasChild',
+          indent: 20
+        }, GlobalConfig.treeConfig, this.treeConfig)
+      },
+      renderClass (this: any): any {
+        const { tableProps, vSize, maximize, treeConfig, treeOpts } = this
         return ['vxe-grid vxe-virtual-tree', {
           [`size--${vSize}`]: vSize,
           't--animat': tableProps.optimization.animat,
-          'has--tree-line': treeConfig && treeConfig.line,
+          'has--tree-line': treeConfig && treeOpts.line,
           'is--maximize': maximize
         }]
       },
-      tableExtendProps(this: any): any {
+      tableExtendProps (this: any): any {
         let rest: any = {}
         propKeys.forEach(key => {
           rest[key] = this[key]
@@ -68,14 +74,14 @@ function registerComponent({ Vue, Table, Grid, setup, t }: typeof VXETable) {
       }
     },
     watch: {
-      columns(this: any): any {
+      columns (this: any): any {
         this.loadColumn(this.handleColumns())
       },
-      data(this: any, value: any[]): any {
+      data (this: any, value: any[]): any {
         this.loadData(value)
       }
     },
-    created(this: any): any {
+    created (this: any): any {
       const { data } = this
       Object.assign(this, {
         fullTreeData: [],
@@ -88,23 +94,23 @@ function registerComponent({ Vue, Table, Grid, setup, t }: typeof VXETable) {
       }
     },
     methods: {
-      renderTreeLine(this: any, params: any, h: any) {
-        const { treeConfig, fullTreeRowMap } = this
+      renderTreeLine (this: any, params: any, h: any) {
+        const { treeConfig, treeOpts, fullTreeRowMap } = this
         const { $table, row, column } = params
         const { treeNode } = column
-        if (treeNode && treeConfig && treeConfig.line) {
+        if (treeNode && treeConfig && treeOpts.line) {
           const $xTree = this
           const rowLevel = row._X_LEVEL
           const matchObj = fullTreeRowMap.get(row)
           return [
-            treeNode && treeConfig && treeConfig.line ? h('div', {
+            treeNode && treeOpts.line ? h('div', {
               class: 'vxe-tree--line-wrapper'
             }, [
               h('div', {
                 class: 'vxe-tree--line',
                 style: {
                   height: `${calcTreeLine($table, $xTree, matchObj)}px`,
-                  left: `${rowLevel * (treeConfig.indent || 20) + (rowLevel ? 2 - getOffsetSize($xTree) : 0) + 16}px`
+                  left: `${rowLevel * (treeOpts.indent || 20) + (rowLevel ? 2 - getOffsetSize($xTree) : 0) + 16}px`
                 }
               })
             ]) : null
@@ -112,10 +118,10 @@ function registerComponent({ Vue, Table, Grid, setup, t }: typeof VXETable) {
         }
         return []
       },
-      renderTreeIcon(this: any, params: any, h: any) {
+      renderTreeIcon (this: any, params: any, h: any, cellVNodes: any) {
         let { isHidden } = params
         let { row } = params
-        let { children, indent, trigger, iconOpen, iconClose } = this.treeConfig
+        let { children, indent, trigger, iconOpen, iconClose } = this.treeOpts
         let rowChildren = row[children]
         let isAceived = false
         let on: any = {}
@@ -126,43 +132,45 @@ function registerComponent({ Vue, Table, Grid, setup, t }: typeof VXETable) {
           on.click = () => this.toggleTreeExpansion(row)
         }
         return [
-          h('span', {
-            class: 'vxe-tree--indent',
-            style: {
-              width: `${row._X_LEVEL * (indent || 20)}px`
-            }
-          }),
-          h('span', {
-            class: ['vxe-tree-wrapper', {
+          h('div', {
+            class: ['vxe-cell--tree-node', {
               'is--active': isAceived
             }],
-            on
-          }, rowChildren && rowChildren.length ? [
-            h('span', {
-              class: 'vxe-tree--btn-wrapper'
-            }, [
-              h('i', {
-                class: ['vxe-tree--node-btn', isAceived ? (iconOpen || GlobalConfig.icon.treeOpen) : (iconClose || GlobalConfig.icon.treeClose)]
-              })
-            ])
-          ] : [])
+            style: {
+              paddingLeft: `${row._X_LEVEL * indent}px`
+            }
+          }, [
+            rowChildren && rowChildren.length ? [
+              h('div', {
+                class: 'vxe-tree--btn-wrapper',
+                on
+              }, [
+                h('i', {
+                  class: ['vxe-tree--node-btn', isAceived ? (iconOpen || GlobalConfig.icon.treeOpen) : (iconClose || GlobalConfig.icon.treeClose)]
+                })
+              ])
+            ] : null,
+            h('div', {
+              class: 'vxe-tree-cell'
+            }, cellVNodes)
+          ])
         ]
       },
-      _loadTreeData(this: any, data: any) {
+      _loadTreeData (this: any, data: any) {
         return this.$nextTick().then(() => this.$refs.xTable.loadData(data))
       },
-      loadData(data: any) {
+      loadData (data: any) {
         return this._loadTreeData(this.toVirtualTree(data))
       },
-      reloadData(this: any, data: any) {
+      reloadData (this: any, data: any) {
         return this.$nextTick()
           .then(() => this.$refs.xTable.reloadData(this.toVirtualTree(data)))
           .then(() => this.handleDefaultTreeExpand())
       },
-      isTreeExpandByRow(row: any) {
+      isTreeExpandByRow (row: any) {
         return !!row._X_EXPAND
       },
-      setTreeExpansion(this: any, rows: any, expanded: any) {
+      setTreeExpansion (this: any, rows: any, expanded: any) {
         if (rows) {
           if (!XEUtils.isArray(rows)) {
             rows = [rows]
@@ -171,26 +179,26 @@ function registerComponent({ Vue, Table, Grid, setup, t }: typeof VXETable) {
         }
         return this._loadTreeData(this.tableData)
       },
-      setAllTreeExpansion(expanded: any) {
+      setAllTreeExpansion (expanded: any) {
         return this._loadTreeData(this.virtualAllExpand(expanded))
       },
-      toggleTreeExpansion(row: any) {
+      toggleTreeExpansion (row: any) {
         return this._loadTreeData(this.virtualExpand(row, !row._X_EXPAND))
       },
-      getTreeExpandRecords(this: any) {
+      getTreeExpandRecords (this: any) {
         const hasChilds = this.hasChilds
         const treeExpandRecords: any[] = []
         XEUtils.eachTree(this.fullTreeData, row => {
           if (row._X_EXPAND && hasChilds(row)) {
             treeExpandRecords.push(row)
           }
-        }, this.treeConfig)
+        }, this.treeOpts)
         return treeExpandRecords
       },
-      clearTreeExpand() {
+      clearTreeExpand () {
         return this.setAllTreeExpansion(false)
       },
-      handleColumns(this: any) {
+      handleColumns (this: any) {
         return this.columns.map((conf: any) => {
           if (conf.treeNode) {
             let slots = conf.slots || {}
@@ -201,37 +209,37 @@ function registerComponent({ Vue, Table, Grid, setup, t }: typeof VXETable) {
           return conf
         })
       },
-      hasChilds(this: any, row: any) {
-        const childList = row[this.treeConfig.children]
+      hasChilds (this: any, row: any) {
+        const childList = row[this.treeOpts.children]
         return childList && childList.length
       },
       /**
        * 获取表格数据集，包含新增、删除、修改
        */
-      getRecordset(this: any) {
+      getRecordset (this: any) {
         return {
           insertRecords: this.getInsertRecords(),
           removeRecords: this.getRemoveRecords(),
           updateRecords: this.getUpdateRecords()
         }
       },
-      isInsertByRow(row: any) {
+      isInsertByRow (row: any) {
         return !!row._X_INSERT
       },
-      getInsertRecords(this: any) {
+      getInsertRecords (this: any) {
         const insertRecords: any[] = []
         XEUtils.eachTree(this.fullTreeData, row => {
           if (row._X_INSERT) {
             insertRecords.push(row)
           }
-        }, this.treeConfig)
+        }, this.treeOpts)
         return insertRecords
       },
-      insert(this: any, records: any) {
+      insert (this: any, records: any) {
         return this.insertAt(records)
       },
-      insertAt(this: any, records: any, row: any) {
-        const { fullTreeData, tableData, treeConfig } = this
+      insertAt (this: any, records: any, row: any) {
+        const { fullTreeData, tableData, treeOpts } = this
         if (!XEUtils.isArray(records)) {
           records = [records]
         }
@@ -248,7 +256,7 @@ function registerComponent({ Vue, Table, Grid, setup, t }: typeof VXETable) {
             fullTreeData.push.apply(fullTreeData, newRecords)
             tableData.push.apply(tableData, newRecords)
           } else {
-            let matchObj = XEUtils.findTree(fullTreeData, item => item === row, treeConfig)
+            let matchObj = XEUtils.findTree(fullTreeData, item => item === row, treeOpts)
             if (!matchObj || matchObj.index === -1) {
               throw new Error(t('vxe.error.unableInsert'))
             }
@@ -273,20 +281,20 @@ function registerComponent({ Vue, Table, Grid, setup, t }: typeof VXETable) {
       /**
        * 获取已删除的数据
        */
-      getRemoveRecords(this: any) {
+      getRemoveRecords (this: any) {
         return this.removeList
       },
       /**
        * 删除选中数据
        */
-      removeSelecteds(this: any) {
+      removeSelecteds (this: any) {
         return this.remove(this.getSelectRecords()).then((params: any) => {
           this.clearSelection()
           return params
         })
       },
-      remove(this: any, rows: any) {
-        const { removeList, fullTreeData, treeConfig } = this
+      remove (this: any, rows: any) {
+        const { removeList, fullTreeData, treeOpts } = this
         let rest: any[] = []
         if (!rows) {
           rows = fullTreeData
@@ -294,7 +302,7 @@ function registerComponent({ Vue, Table, Grid, setup, t }: typeof VXETable) {
           rows = [rows]
         }
         rows.forEach((row: any) => {
-          let matchObj = XEUtils.findTree(fullTreeData, item => item === row, treeConfig)
+          let matchObj = XEUtils.findTree(fullTreeData, item => item === row, treeOpts)
           if (matchObj) {
             const { item, items, index, parent }: any = matchObj
             if (!this.isInsertByRow(row)) {
@@ -324,17 +332,16 @@ function registerComponent({ Vue, Table, Grid, setup, t }: typeof VXETable) {
       /**
        * 处理默认展开树节点
        */
-      handleDefaultTreeExpand(this: any) {
-        let { treeConfig, tableFullData } = this
+      handleDefaultTreeExpand (this: any) {
+        let { treeConfig, treeOpts, tableFullData } = this
         if (treeConfig) {
-          let { expandAll, expandRowKeys } = treeConfig
-          let { children } = treeConfig
+          let { children, expandAll, expandRowKeys } = treeOpts
           if (expandAll) {
             this.setAllTreeExpansion(true)
           } else if (expandRowKeys) {
             let rowkey = this.rowId
             expandRowKeys.forEach((rowid: any) => {
-              let matchObj = XEUtils.findTree(tableFullData, item => rowid === XEUtils.get(item, rowkey), treeConfig)
+              let matchObj = XEUtils.findTree(tableFullData, item => rowid === XEUtils.get(item, rowkey), treeOpts)
               let rowChildren = matchObj ? matchObj.item[children] : 0
               if (rowChildren && rowChildren.length) {
                 this.setTreeExpansion(matchObj.item, true)
@@ -346,7 +353,7 @@ function registerComponent({ Vue, Table, Grid, setup, t }: typeof VXETable) {
       /**
        * 定义树属性
        */
-      toVirtualTree(this: any, treeData: any[]) {
+      toVirtualTree (this: any, treeData: any[]) {
         let fullTreeRowMap = this.fullTreeRowMap
         fullTreeRowMap.clear()
         XEUtils.eachTree(treeData, (item, index, items, paths, parent, nodes) => {
@@ -362,7 +369,7 @@ function registerComponent({ Vue, Table, Grid, setup, t }: typeof VXETable) {
       /**
        * 展开/收起树节点
        */
-      virtualExpand(this: any, row: any, expanded: any) {
+      virtualExpand (this: any, row: any, expanded: any) {
         if (row._X_EXPAND !== expanded) {
           if (row._X_EXPAND) {
             this.handleCollapsing(row)
@@ -373,10 +380,10 @@ function registerComponent({ Vue, Table, Grid, setup, t }: typeof VXETable) {
         return this.tableData
       },
       // 展开节点
-      handleExpanding(this: any, row: any) {
+      handleExpanding (this: any, row: any) {
         if (this.hasChilds(row)) {
-          const { tableData, treeConfig } = this
-          let childRows = row[treeConfig.children]
+          const { tableData, treeOpts } = this
+          let childRows = row[treeOpts.children]
           let expandList: any[] = []
           let rowIndex = tableData.indexOf(row)
           if (rowIndex === -1) {
@@ -386,21 +393,21 @@ function registerComponent({ Vue, Table, Grid, setup, t }: typeof VXETable) {
             if (!parent || parent._X_EXPAND) {
               expandList.push(item)
             }
-          }, treeConfig)
+          }, treeOpts)
           row._X_EXPAND = true
           tableData.splice.apply(tableData, [rowIndex + 1, 0].concat(expandList))
         }
         return this.tableData
       },
       // 收起节点
-      handleCollapsing(this: any, row: any) {
+      handleCollapsing (this: any, row: any) {
         if (this.hasChilds(row)) {
-          const { tableData, treeConfig } = this
-          let childRows = row[treeConfig.children]
+          const { tableData, treeOpts } = this
+          let childRows = row[treeOpts.children]
           let nodeChildList: any[] = []
           XEUtils.eachTree(childRows, item => {
             nodeChildList.push(item)
-          }, treeConfig)
+          }, treeOpts)
           row._X_EXPAND = false
           this.tableData = tableData.filter((item: any) => nodeChildList.indexOf(item) === -1)
         }
@@ -409,10 +416,10 @@ function registerComponent({ Vue, Table, Grid, setup, t }: typeof VXETable) {
       /**
        * 展开/收起所有树节点
        */
-      virtualAllExpand(this: any, expanded: any) {
+      virtualAllExpand (this: any, expanded: any) {
         XEUtils.eachTree(this.fullTreeData, row => {
           this.virtualExpand(row, expanded)
-        }, this.treeConfig)
+        }, this.treeOpts)
         return this.tableData
       }
     }
@@ -425,7 +432,7 @@ function registerComponent({ Vue, Table, Grid, setup, t }: typeof VXETable) {
  * 基于 vxe-table 表格的增强插件，实现简单的虚拟树表格
  */
 export const VXETablePluginVirtualTree = {
-  install(xtable: typeof VXETable) {
+  install (xtable: typeof VXETable) {
     // 注册组件
     registerComponent(xtable)
   }
