@@ -370,11 +370,14 @@
         getRemoveRecords: function getRemoveRecords() {
           return this.removeList;
         },
+        removeSelecteds: function removeSelecteds() {
+          return this.removeCheckboxRow();
+        },
 
         /**
          * 删除选中数据
          */
-        removeSelecteds: function removeSelecteds() {
+        removeCheckboxRow: function removeCheckboxRow() {
           var _this8 = this;
 
           return this.remove(this.getSelectRecords()).then(function (params) {

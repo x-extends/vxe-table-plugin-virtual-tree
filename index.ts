@@ -284,10 +284,13 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: typeof VXETable) {
       getRemoveRecords (this: any) {
         return this.removeList
       },
+      removeSelecteds () {
+        return this.removeCheckboxRow()
+      },
       /**
        * 删除选中数据
        */
-      removeSelecteds (this: any) {
+      removeCheckboxRow (this: any) {
         return this.remove(this.getSelectRecords()).then((params: any) => {
           this.clearSelection()
           return params
