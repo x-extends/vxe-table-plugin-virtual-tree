@@ -50,11 +50,11 @@
     "typescript": "^3.6.3",
     "vue": "^2.6.10",
     "vxe-table": "^2.8.18",
-    "xe-utils": "^2.4.0"
+    "xe-utils": "^2.4.1"
   },
   "peerDependencies": {
     "vxe-table": ">=2.7.0",
-    "xe-utils": ">=2.2.0"
+    "xe-utils": ">=2.4.0"
   },
   "repository": {
     "type": "git",
