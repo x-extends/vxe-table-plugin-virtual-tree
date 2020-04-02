@@ -33,7 +33,7 @@ function calcTreeLine ($table: any, $xTree: any, matchObj: any): number {
   return $table.rowHeight * expandSize - (index ? 1 : (12 - getOffsetSize($xTree)))
 }
 
-function registerComponent ({ Vue, Table, Grid, setup, t }: typeof VXETable) {
+function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
   const GlobalConfig = setup()
   const propKeys = Object.keys(Table.props).filter(name => ['data', 'treeConfig'].indexOf(name) === -1)
 
