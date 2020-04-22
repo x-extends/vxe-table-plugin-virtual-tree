@@ -53,8 +53,8 @@
     "xe-utils": "^2.4.1"
   },
   "peerDependencies": {
-    "vxe-table": ">=2.7.0",
-    "xe-utils": ">=2.4.0"
+    "vxe-table": ">= 2.9.0 < 3",
+    "xe-utils": ">= 2.4.0"
   },
   "repository": {
     "type": "git",
