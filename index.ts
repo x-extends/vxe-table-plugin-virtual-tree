@@ -1,5 +1,8 @@
+/* eslint-disable no-unused-vars */
+import { CreateElement, VNodeChildren } from 'vue'
 import XEUtils from 'xe-utils/methods/xe-utils'
-import VXETable from 'vxe-table/lib/vxe-table'
+import { VXETable } from 'vxe-table/lib/vxe-table'
+/* eslint-enable no-unused-vars */
 
 function countTreeExpand ($xTree: any, prevRow: any): number {
   const rowChildren = prevRow[$xTree.treeOpts.children]
@@ -46,26 +49,26 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
       }
     },
     computed: {
-      vSize (this: any): any {
+      vSize (this: any) {
         return this.size || this.$parent.size || this.$parent.vSize
       },
-      treeOpts (this: any): any {
+      treeOpts (this: any) {
         return Object.assign({
           children: 'children',
           hasChild: 'hasChild',
           indent: 20
         }, GlobalConfig.treeConfig, this.treeConfig)
       },
-      renderClass (this: any): any {
-        const { tableProps, vSize, maximize, treeConfig, treeOpts } = this
+      renderClass (this: any) {
+        const { vSize } = this
         return ['vxe-grid vxe-virtual-tree', {
           [`size--${vSize}`]: vSize,
-          't--animat': tableProps.optimization.animat,
-          'has--tree-line': treeConfig && treeOpts.line,
-          'is--maximize': maximize
+          't--animat': this.animat,
+          'has--tree-line': this.treeConfig && this.treeOpts.line,
+          'is--maximize': this.isMaximized()
         }]
       },
-      tableExtendProps (this: any): any {
+      tableExtendProps (this: any) {
         let rest: any = {}
         propKeys.forEach(key => {
           rest[key] = this[key]
@@ -74,14 +77,14 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
       }
     },
     watch: {
-      columns (this: any): any {
+      columns (this: any) {
         this.loadColumn(this.handleColumns())
       },
-      data (this: any, value: any[]): any {
+      data (this: any, value: any[]) {
         this.loadData(value)
       }
     },
-    created (this: any): any {
+    created (this: any) {
       const { data } = this
       Object.assign(this, {
         fullTreeData: [],
@@ -94,7 +97,7 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
       }
     },
     methods: {
-      renderTreeLine (this: any, params: any, h: any) {
+      renderTreeLine (this: any, params: any, h: CreateElement) {
         const { treeConfig, treeOpts, fullTreeRowMap } = this
         const { $table, row, column } = params
         const { treeNode } = column
@@ -118,7 +121,7 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
         }
         return []
       },
-      renderTreeIcon (this: any, params: any, h: any, cellVNodes: any) {
+      renderTreeIcon (this: any, params: any, h: CreateElement, cellVNodes: VNodeChildren) {
         let { isHidden } = params
         let { row } = params
         let { children, indent, trigger, iconOpen, iconClose } = this.treeOpts
@@ -146,7 +149,7 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
                 on
               }, [
                 h('i', {
-                  class: ['vxe-tree--node-btn', isAceived ? (iconOpen || GlobalConfig.icon.treeOpen) : (iconClose || GlobalConfig.icon.treeClose)]
+                  class: ['vxe-tree--node-btn', isAceived ? (iconOpen || GlobalConfig.icon.TABLE_TREE_OPEN) : (iconClose || GlobalConfig.icon.TABLE_TREE_CLOSE)]
                 })
               ])
             ] : null,

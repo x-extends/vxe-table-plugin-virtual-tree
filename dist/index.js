@@ -23,6 +23,7 @@
 
   function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+  /* eslint-enable no-unused-vars */
   function countTreeExpand($xTree, prevRow) {
     var rowChildren = prevRow[$xTree.treeOpts.children];
     var count = 1;
@@ -95,12 +96,8 @@
         renderClass: function renderClass() {
           var _ref2;
 
-          var tableProps = this.tableProps,
-              vSize = this.vSize,
-              maximize = this.maximize,
-              treeConfig = this.treeConfig,
-              treeOpts = this.treeOpts;
-          return ['vxe-grid vxe-virtual-tree', (_ref2 = {}, _defineProperty(_ref2, "size--".concat(vSize), vSize), _defineProperty(_ref2, 't--animat', tableProps.optimization.animat), _defineProperty(_ref2, 'has--tree-line', treeConfig && treeOpts.line), _defineProperty(_ref2, 'is--maximize', maximize), _ref2)];
+          var vSize = this.vSize;
+          return ['vxe-grid vxe-virtual-tree', (_ref2 = {}, _defineProperty(_ref2, "size--".concat(vSize), vSize), _defineProperty(_ref2, 't--animat', this.animat), _defineProperty(_ref2, 'has--tree-line', this.treeConfig && this.treeOpts.line), _defineProperty(_ref2, 'is--maximize', this.isMaximized()), _ref2)];
         },
         tableExtendProps: function tableExtendProps() {
           var _this = this;
@@ -196,7 +193,7 @@
             "class": 'vxe-tree--btn-wrapper',
             on: on
           }, [h('i', {
-            "class": ['vxe-tree--node-btn', isAceived ? iconOpen || GlobalConfig.icon.treeOpen : iconClose || GlobalConfig.icon.treeClose]
+            "class": ['vxe-tree--node-btn', isAceived ? iconOpen || GlobalConfig.icon.TABLE_TREE_OPEN : iconClose || GlobalConfig.icon.TABLE_TREE_CLOSE]
           })])] : null, h('div', {
             "class": 'vxe-tree-cell'
           }, cellVNodes)])];
