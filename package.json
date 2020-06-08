@@ -50,7 +50,7 @@
     "typescript": "^3.6.3",
     "vue": "^2.6.10",
     "vxe-table": "^2.9.11",
-    "xe-utils": "^2.4.5"
+    "xe-utils": "^2.4.6"
   },
   "peerDependencies": {
     "vxe-table": ">= 2.9.0 < 3",
