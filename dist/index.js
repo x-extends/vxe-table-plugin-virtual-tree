@@ -567,11 +567,22 @@
          * 展开/收起所有树节点
          */
         virtualAllExpand: function virtualAllExpand(expanded) {
-          var _this11 = this;
+          if (expanded) {
+            var tableList = [];
 
-          _xeUtils["default"].eachTree(this.fullTreeData, function (row) {
-            _this11.virtualExpand(row, expanded);
-          }, this.treeOpts);
+            _xeUtils["default"].eachTree(this.fullTreeData, function (row) {
+              row._X_EXPAND = expanded;
+              tableList.push(row);
+            }, this.treeOpts);
+
+            this.tableData = tableList;
+          } else {
+            _xeUtils["default"].eachTree(this.fullTreeData, function (row) {
+              row._X_EXPAND = expanded;
+            }, this.treeOpts);
+
+            this.tableData = this.fullTreeData.slice(0);
+          }
 
           return this.tableData;
         }

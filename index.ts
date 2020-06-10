@@ -299,7 +299,7 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
           return params
         })
       },
-      remove (this: any, rows: any) {
+      remove (this: any, rows: any[]) {
         const { removeList, fullTreeData, treeOpts } = this
         let rest: any[] = []
         if (!rows) {
@@ -375,7 +375,7 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
       /**
        * 展开/收起树节点
        */
-      virtualExpand (this: any, row: any, expanded: any) {
+      virtualExpand (this: any, row: any, expanded: boolean) {
         if (row._X_EXPAND !== expanded) {
           if (row._X_EXPAND) {
             this.handleCollapsing(row)
@@ -422,10 +422,20 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
       /**
        * 展开/收起所有树节点
        */
-      virtualAllExpand (this: any, expanded: any) {
-        XEUtils.eachTree(this.fullTreeData, row => {
-          this.virtualExpand(row, expanded)
-        }, this.treeOpts)
+      virtualAllExpand (this: any, expanded: boolean) {
+        if (expanded) {
+          const tableList: any[] = []
+          XEUtils.eachTree(this.fullTreeData, row => {
+            row._X_EXPAND = expanded
+            tableList.push(row)
+          }, this.treeOpts)
+          this.tableData = tableList
+        } else {
+          XEUtils.eachTree(this.fullTreeData, row => {
+            row._X_EXPAND = expanded
+          }, this.treeOpts)
+          this.tableData = this.fullTreeData.slice(0)
+        }
         return this.tableData
       }
     }
