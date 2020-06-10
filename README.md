@@ -29,6 +29,7 @@ VXETable.use(VXETablePluginVirtualTree)
 ```html
 <vxe-virtual-tree
   border
+  show-overflow
   row-key
   row-id="id"
   :data="tableData"
