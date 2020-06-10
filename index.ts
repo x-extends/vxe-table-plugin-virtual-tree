@@ -132,7 +132,7 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
           isAceived = row._X_EXPAND
         }
         if (!trigger || trigger === 'default') {
-          on.click = () => this.toggleTreeExpansion(row)
+          on.click = () => this.toggleTreeExpand(row)
         }
         return [
           h('div', {
@@ -160,7 +160,14 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
         ]
       },
       _loadTreeData (this: any, data: any) {
-        return this.$nextTick().then(() => this.$refs.xTable.loadData(data))
+        const selectRow = this.getRadioRecord()
+        return this.$nextTick()
+          .then(() => this.$refs.xTable.loadData(data))
+          .then(() => {
+            if (selectRow) {
+              this.setRadioRow(selectRow)
+            }
+          })
       },
       loadData (data: any) {
         return this._loadTreeData(this.toVirtualTree(data))
@@ -173,7 +180,10 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
       isTreeExpandByRow (row: any) {
         return !!row._X_EXPAND
       },
-      setTreeExpansion (this: any, rows: any, expanded: any) {
+      setTreeExpansion (rows: any, expanded: any) {
+        return this.setTreeExpand(rows, expanded)
+      },
+      setTreeExpand (this: any, rows: any, expanded: any) {
         if (rows) {
           if (!XEUtils.isArray(rows)) {
             rows = [rows]
@@ -183,9 +193,15 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
         return this._loadTreeData(this.tableData)
       },
       setAllTreeExpansion (expanded: any) {
+        return this.setAllTreeExpand(expanded)
+      },
+      setAllTreeExpand (expanded: any) {
         return this._loadTreeData(this.virtualAllExpand(expanded))
       },
       toggleTreeExpansion (row: any) {
+        return this.toggleTreeExpand(row)
+      },
+      toggleTreeExpand (row: any) {
         return this._loadTreeData(this.virtualExpand(row, !row._X_EXPAND))
       },
       getTreeExpandRecords (this: any) {
@@ -199,7 +215,7 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
         return treeExpandRecords
       },
       clearTreeExpand () {
-        return this.setAllTreeExpansion(false)
+        return this.setAllTreeExpand(false)
       },
       handleColumns (this: any) {
         return this.columns.map((conf: any) => {
@@ -343,14 +359,14 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
         if (treeConfig) {
           let { children, expandAll, expandRowKeys } = treeOpts
           if (expandAll) {
-            this.setAllTreeExpansion(true)
+            this.setAllTreeExpand(true)
           } else if (expandRowKeys) {
             let rowkey = this.rowId
             expandRowKeys.forEach((rowid: any) => {
               let matchObj = XEUtils.findTree(tableFullData, item => rowid === XEUtils.get(item, rowkey), treeOpts)
               let rowChildren = matchObj ? matchObj.item[children] : 0
               if (rowChildren && rowChildren.length) {
-                this.setTreeExpansion(matchObj.item, true)
+                this.setTreeExpand(matchObj.item, true)
               }
             })
           }

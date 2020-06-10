@@ -178,7 +178,7 @@
 
           if (!trigger || trigger === 'default') {
             on.click = function () {
-              return _this2.toggleTreeExpansion(row);
+              return _this2.toggleTreeExpand(row);
             };
           }
 
@@ -201,8 +201,13 @@
         _loadTreeData: function _loadTreeData(data) {
           var _this3 = this;
 
+          var selectRow = this.getRadioRecord();
           return this.$nextTick().then(function () {
             return _this3.$refs.xTable.loadData(data);
+          }).then(function () {
+            if (selectRow) {
+              _this3.setRadioRow(selectRow);
+            }
           });
         },
         loadData: function loadData(data) {
@@ -221,6 +226,9 @@
           return !!row._X_EXPAND;
         },
         setTreeExpansion: function setTreeExpansion(rows, expanded) {
+          return this.setTreeExpand(rows, expanded);
+        },
+        setTreeExpand: function setTreeExpand(rows, expanded) {
           var _this5 = this;
 
           if (rows) {
@@ -236,9 +244,15 @@
           return this._loadTreeData(this.tableData);
         },
         setAllTreeExpansion: function setAllTreeExpansion(expanded) {
+          return this.setAllTreeExpand(expanded);
+        },
+        setAllTreeExpand: function setAllTreeExpand(expanded) {
           return this._loadTreeData(this.virtualAllExpand(expanded));
         },
         toggleTreeExpansion: function toggleTreeExpansion(row) {
+          return this.toggleTreeExpand(row);
+        },
+        toggleTreeExpand: function toggleTreeExpand(row) {
           return this._loadTreeData(this.virtualExpand(row, !row._X_EXPAND));
         },
         getTreeExpandRecords: function getTreeExpandRecords() {
@@ -254,7 +268,7 @@
           return treeExpandRecords;
         },
         clearTreeExpand: function clearTreeExpand() {
-          return this.setAllTreeExpansion(false);
+          return this.setAllTreeExpand(false);
         },
         handleColumns: function handleColumns() {
           var _this6 = this;
@@ -459,7 +473,7 @@
                 expandRowKeys = treeOpts.expandRowKeys;
 
             if (expandAll) {
-              this.setAllTreeExpansion(true);
+              this.setAllTreeExpand(true);
             } else if (expandRowKeys) {
               var rowkey = this.rowId;
               expandRowKeys.forEach(function (rowid) {
@@ -470,7 +484,7 @@
                 var rowChildren = matchObj ? matchObj.item[children] : 0;
 
                 if (rowChildren && rowChildren.length) {
-                  _this10.setTreeExpansion(matchObj.item, true);
+                  _this10.setTreeExpand(matchObj.item, true);
                 }
               });
             }
