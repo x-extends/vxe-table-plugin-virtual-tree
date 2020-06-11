@@ -27,7 +27,6 @@ VXETable.use(VXETablePluginVirtualTree)
 ## Compatibility
 
 * 不支持连接线
-* 不支持复选框父子关联
 
 ## Demo
 
