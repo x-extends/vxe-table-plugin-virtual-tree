@@ -97,6 +97,26 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
       }
     },
     methods: {
+      getTableOns (this: any) {
+        const { $listeners, proxyConfig, proxyOpts } = this
+        const ons: { [key: string]: Function } = {}
+        XEUtils.each($listeners, (cb, type) => {
+          ons[type] = function (...args: any[]) {
+            this.$emit(type, ...args)
+          }
+        })
+        ons['checkbox-all'] = this.checkboxAllEvent
+        ons['checkbox-change'] = this.checkboxChangeEvent
+        if (proxyConfig) {
+          if (proxyOpts.sort) {
+            ons['sort-change'] = this.sortChangeEvent
+          }
+          if (proxyOpts.filter) {
+            ons['filter-change'] = this.filterChangeEvent
+          }
+        }
+        return ons
+      },
       renderTreeLine (this: any, params: any, h: CreateElement) {
         const { treeConfig, treeOpts, fullTreeRowMap } = this
         const { $table, row, column } = params
@@ -439,20 +459,69 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
        * 展开/收起所有树节点
        */
       virtualAllExpand (this: any, expanded: boolean) {
+        const { treeOpts } = this
         if (expanded) {
           const tableList: any[] = []
           XEUtils.eachTree(this.fullTreeData, row => {
             row._X_EXPAND = expanded
             tableList.push(row)
-          }, this.treeOpts)
+          }, treeOpts)
           this.tableData = tableList
         } else {
           XEUtils.eachTree(this.fullTreeData, row => {
             row._X_EXPAND = expanded
-          }, this.treeOpts)
+          }, treeOpts)
           this.tableData = this.fullTreeData.slice(0)
         }
         return this.tableData
+      },
+      checkboxAllEvent (this: any, params: any) {
+        const { checkboxConfig = {}, treeOpts } = this
+        const { checkField, halfField, checkStrictly } = checkboxConfig
+        const { checked } = params
+        if (checkField && !checkStrictly) {
+          XEUtils.eachTree(this.fullTreeData, row => {
+            row[checkField] = checked
+            if (halfField) {
+              row[halfField] = false
+            }
+          }, treeOpts)
+        }
+        this.$emit('checkbox-all', params)
+      },
+      checkboxChangeEvent (this: any, params: any) {
+        const { checkboxConfig = {}, treeOpts } = this
+        const { checkField, halfField, checkStrictly } = checkboxConfig
+        const { row, checked } = params
+        if (checkField && !checkStrictly) {
+          XEUtils.eachTree([row], row => {
+            row[checkField] = checked
+            if (halfField) {
+              row[halfField] = false
+            }
+          }, treeOpts)
+          this.checkParentNodeSelection(row)
+        }
+        this.$emit('checkbox-change', params)
+      },
+      checkParentNodeSelection (this: any, row: any) {
+        const { checkboxConfig = {}, treeOpts } = this
+        const { children } = treeOpts
+        const { checkField, halfField, checkStrictly } = checkboxConfig
+        const matchObj = XEUtils.findTree(this.fullTreeData, item => item === row, treeOpts)
+        if (matchObj && checkField && !checkStrictly) {
+          const parentRow = matchObj.parent
+          if (parentRow) {
+            const isAll = parentRow[children].every((item: any) => item[checkField])
+            if (halfField && !isAll) {
+              parentRow[halfField] = parentRow[children].some((item: any) => item[checkField])
+            }
+            parentRow[checkField] = isAll
+            this.checkParentNodeSelection(parentRow)
+          } else {
+            this.$refs.xTable.checkSelectionStatus()
+          }
+        }
       }
     }
   }

@@ -131,6 +131,37 @@
         }
       },
       methods: {
+        getTableOns: function getTableOns() {
+          var $listeners = this.$listeners,
+              proxyConfig = this.proxyConfig,
+              proxyOpts = this.proxyOpts;
+          var ons = {};
+
+          _xeUtils["default"].each($listeners, function (cb, type) {
+            ons[type] = function () {
+              for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+                args[_key] = arguments[_key];
+              }
+
+              this.$emit.apply(this, [type].concat(args));
+            };
+          });
+
+          ons['checkbox-all'] = this.checkboxAllEvent;
+          ons['checkbox-change'] = this.checkboxChangeEvent;
+
+          if (proxyConfig) {
+            if (proxyOpts.sort) {
+              ons['sort-change'] = this.sortChangeEvent;
+            }
+
+            if (proxyOpts.filter) {
+              ons['filter-change'] = this.filterChangeEvent;
+            }
+          }
+
+          return ons;
+        },
         renderTreeLine: function renderTreeLine(params, h) {
           var treeConfig = this.treeConfig,
               treeOpts = this.treeOpts,
@@ -581,24 +612,105 @@
          * 展开/收起所有树节点
          */
         virtualAllExpand: function virtualAllExpand(expanded) {
+          var treeOpts = this.treeOpts;
+
           if (expanded) {
             var tableList = [];
 
             _xeUtils["default"].eachTree(this.fullTreeData, function (row) {
               row._X_EXPAND = expanded;
               tableList.push(row);
-            }, this.treeOpts);
+            }, treeOpts);
 
             this.tableData = tableList;
           } else {
             _xeUtils["default"].eachTree(this.fullTreeData, function (row) {
               row._X_EXPAND = expanded;
-            }, this.treeOpts);
+            }, treeOpts);
 
             this.tableData = this.fullTreeData.slice(0);
           }
 
           return this.tableData;
+        },
+        checkboxAllEvent: function checkboxAllEvent(params) {
+          var _this$checkboxConfig = this.checkboxConfig,
+              checkboxConfig = _this$checkboxConfig === void 0 ? {} : _this$checkboxConfig,
+              treeOpts = this.treeOpts;
+          var checkField = checkboxConfig.checkField,
+              halfField = checkboxConfig.halfField,
+              checkStrictly = checkboxConfig.checkStrictly;
+          var checked = params.checked;
+
+          if (checkField && !checkStrictly) {
+            _xeUtils["default"].eachTree(this.fullTreeData, function (row) {
+              row[checkField] = checked;
+
+              if (halfField) {
+                row[halfField] = false;
+              }
+            }, treeOpts);
+          }
+
+          this.$emit('checkbox-all', params);
+        },
+        checkboxChangeEvent: function checkboxChangeEvent(params) {
+          var _this$checkboxConfig2 = this.checkboxConfig,
+              checkboxConfig = _this$checkboxConfig2 === void 0 ? {} : _this$checkboxConfig2,
+              treeOpts = this.treeOpts;
+          var checkField = checkboxConfig.checkField,
+              halfField = checkboxConfig.halfField,
+              checkStrictly = checkboxConfig.checkStrictly;
+          var row = params.row,
+              checked = params.checked;
+
+          if (checkField && !checkStrictly) {
+            _xeUtils["default"].eachTree([row], function (row) {
+              row[checkField] = checked;
+
+              if (halfField) {
+                row[halfField] = false;
+              }
+            }, treeOpts);
+
+            this.checkParentNodeSelection(row);
+          }
+
+          this.$emit('checkbox-change', params);
+        },
+        checkParentNodeSelection: function checkParentNodeSelection(row) {
+          var _this$checkboxConfig3 = this.checkboxConfig,
+              checkboxConfig = _this$checkboxConfig3 === void 0 ? {} : _this$checkboxConfig3,
+              treeOpts = this.treeOpts;
+          var children = treeOpts.children;
+          var checkField = checkboxConfig.checkField,
+              halfField = checkboxConfig.halfField,
+              checkStrictly = checkboxConfig.checkStrictly;
+
+          var matchObj = _xeUtils["default"].findTree(this.fullTreeData, function (item) {
+            return item === row;
+          }, treeOpts);
+
+          if (matchObj && checkField && !checkStrictly) {
+            var parentRow = matchObj.parent;
+
+            if (parentRow) {
+              var isAll = parentRow[children].every(function (item) {
+                return item[checkField];
+              });
+
+              if (halfField && !isAll) {
+                parentRow[halfField] = parentRow[children].some(function (item) {
+                  return item[checkField];
+                });
+              }
+
+              parentRow[checkField] = isAll;
+              this.checkParentNodeSelection(parentRow);
+            } else {
+              this.$refs.xTable.checkSelectionStatus();
+            }
+          }
         }
       }
     };
