@@ -522,6 +522,34 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
             this.$refs.xTable.checkSelectionStatus()
           }
         }
+      },
+      getCheckboxRecords (this: any) {
+        const { checkboxConfig = {}, treeOpts } = this
+        const { checkField } = checkboxConfig
+        if (checkField) {
+          const records: any[] = []
+          XEUtils.eachTree(this.fullTreeData, row => {
+            if (row[checkField]) {
+              records.push(row)
+            }
+          }, treeOpts)
+          return records
+        }
+        return this.$refs.xTable.getCheckboxRecords()
+      },
+      getCheckboxIndeterminateRecords (this: any) {
+        const { checkboxConfig = {}, treeOpts } = this
+        const { halfField } = checkboxConfig
+        if (halfField) {
+          const records: any[] = []
+          XEUtils.eachTree(this.fullTreeData, row => {
+            if (row[halfField]) {
+              records.push(row)
+            }
+          }, treeOpts)
+          return records
+        }
+        return this.$refs.xTable.getCheckboxIndeterminateRecords()
       }
     }
   }

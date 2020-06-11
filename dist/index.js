@@ -711,6 +711,46 @@
               this.$refs.xTable.checkSelectionStatus();
             }
           }
+        },
+        getCheckboxRecords: function getCheckboxRecords() {
+          var _this$checkboxConfig4 = this.checkboxConfig,
+              checkboxConfig = _this$checkboxConfig4 === void 0 ? {} : _this$checkboxConfig4,
+              treeOpts = this.treeOpts;
+          var checkField = checkboxConfig.checkField;
+
+          if (checkField) {
+            var records = [];
+
+            _xeUtils["default"].eachTree(this.fullTreeData, function (row) {
+              if (row[checkField]) {
+                records.push(row);
+              }
+            }, treeOpts);
+
+            return records;
+          }
+
+          return this.$refs.xTable.getCheckboxRecords();
+        },
+        getCheckboxIndeterminateRecords: function getCheckboxIndeterminateRecords() {
+          var _this$checkboxConfig5 = this.checkboxConfig,
+              checkboxConfig = _this$checkboxConfig5 === void 0 ? {} : _this$checkboxConfig5,
+              treeOpts = this.treeOpts;
+          var halfField = checkboxConfig.halfField;
+
+          if (halfField) {
+            var records = [];
+
+            _xeUtils["default"].eachTree(this.fullTreeData, function (row) {
+              if (row[halfField]) {
+                records.push(row);
+              }
+            }, treeOpts);
+
+            return records;
+          }
+
+          return this.$refs.xTable.getCheckboxIndeterminateRecords();
         }
       }
     };
