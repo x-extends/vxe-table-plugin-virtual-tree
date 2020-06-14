@@ -514,7 +514,7 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
           if (parentRow) {
             const isAll = parentRow[children].every((item: any) => item[checkField])
             if (halfField && !isAll) {
-              parentRow[halfField] = parentRow[children].some((item: any) => item[checkField])
+              parentRow[halfField] = parentRow[children].some((item: any) => item[checkField] || item[halfField])
             }
             parentRow[checkField] = isAll
             this.checkParentNodeSelection(parentRow)

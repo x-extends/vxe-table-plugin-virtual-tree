@@ -701,7 +701,7 @@
 
               if (halfField && !isAll) {
                 parentRow[halfField] = parentRow[children].some(function (item) {
-                  return item[checkField];
+                  return item[checkField] || item[halfField];
                 });
               }
 
