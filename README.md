@@ -26,7 +26,9 @@ VXETable.use(VXETablePluginVirtualTree)
 
 ## Compatibility
 
-* 不支持连接线
+* 不支持的参数
+  * keep-source
+  * tree-config.line
 
 ## Demo
 
