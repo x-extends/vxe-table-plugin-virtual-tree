@@ -101,7 +101,7 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
         const { $listeners, proxyConfig, proxyOpts } = this
         const ons: { [key: string]: Function } = {}
         XEUtils.each($listeners, (cb, type) => {
-          ons[type] = function (...args: any[]) {
+          ons[type] = (...args: any[]) => {
             this.$emit(type, ...args)
           }
         })

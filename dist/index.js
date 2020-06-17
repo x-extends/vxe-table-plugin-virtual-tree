@@ -132,6 +132,8 @@
       },
       methods: {
         getTableOns: function getTableOns() {
+          var _this2 = this;
+
           var $listeners = this.$listeners,
               proxyConfig = this.proxyConfig,
               proxyOpts = this.proxyOpts;
@@ -143,7 +145,7 @@
                 args[_key] = arguments[_key];
               }
 
-              this.$emit.apply(this, [type].concat(args));
+              _this2.$emit.apply(_this2, [type].concat(args));
             };
           });
 
@@ -189,7 +191,7 @@
           return [];
         },
         renderTreeIcon: function renderTreeIcon(params, h, cellVNodes) {
-          var _this2 = this;
+          var _this3 = this;
 
           var isHidden = params.isHidden;
           var row = params.row;
@@ -209,7 +211,7 @@
 
           if (!trigger || trigger === 'default') {
             on.click = function () {
-              return _this2.toggleTreeExpand(row);
+              return _this3.toggleTreeExpand(row);
             };
           }
 
@@ -230,14 +232,14 @@
           }, cellVNodes)])];
         },
         _loadTreeData: function _loadTreeData(data) {
-          var _this3 = this;
+          var _this4 = this;
 
           var selectRow = this.getRadioRecord();
           return this.$nextTick().then(function () {
-            return _this3.$refs.xTable.loadData(data);
+            return _this4.$refs.xTable.loadData(data);
           }).then(function () {
             if (selectRow) {
-              _this3.setRadioRow(selectRow);
+              _this4.setRadioRow(selectRow);
             }
           });
         },
@@ -245,12 +247,12 @@
           return this._loadTreeData(this.toVirtualTree(data));
         },
         reloadData: function reloadData(data) {
-          var _this4 = this;
+          var _this5 = this;
 
           return this.$nextTick().then(function () {
-            return _this4.$refs.xTable.reloadData(_this4.toVirtualTree(data));
+            return _this5.$refs.xTable.reloadData(_this5.toVirtualTree(data));
           }).then(function () {
-            return _this4.handleDefaultTreeExpand();
+            return _this5.handleDefaultTreeExpand();
           });
         },
         isTreeExpandByRow: function isTreeExpandByRow(row) {
@@ -260,7 +262,7 @@
           return this.setTreeExpand(rows, expanded);
         },
         setTreeExpand: function setTreeExpand(rows, expanded) {
-          var _this5 = this;
+          var _this6 = this;
 
           if (rows) {
             if (!_xeUtils["default"].isArray(rows)) {
@@ -268,7 +270,7 @@
             }
 
             rows.forEach(function (row) {
-              return _this5.virtualExpand(row, !!expanded);
+              return _this6.virtualExpand(row, !!expanded);
             });
           }
 
@@ -302,13 +304,13 @@
           return this.setAllTreeExpand(false);
         },
         handleColumns: function handleColumns() {
-          var _this6 = this;
+          var _this7 = this;
 
           return this.columns.map(function (conf) {
             if (conf.treeNode) {
               var slots = conf.slots || {};
-              slots.icon = _this6.renderTreeIcon;
-              slots.line = _this6.renderTreeLine;
+              slots.icon = _this7.renderTreeIcon;
+              slots.line = _this7.renderTreeLine;
               conf.slots = slots;
             }
 
@@ -348,7 +350,7 @@
           return this.insertAt(records);
         },
         insertAt: function insertAt(records, row) {
-          var _this7 = this;
+          var _this8 = this;
 
           var fullTreeData = this.fullTreeData,
               tableData = this.tableData,
@@ -359,7 +361,7 @@
           }
 
           var newRecords = records.map(function (record) {
-            return _this7.defineField(Object.assign({
+            return _this8.defineField(Object.assign({
               _X_EXPAND: false,
               _X_INSERT: true,
               _X_LEVEL: 0
@@ -420,16 +422,16 @@
          * 删除选中数据
          */
         removeCheckboxRow: function removeCheckboxRow() {
-          var _this8 = this;
+          var _this9 = this;
 
           return this.remove(this.getSelectRecords()).then(function (params) {
-            _this8.clearSelection();
+            _this9.clearSelection();
 
             return params;
           });
         },
         remove: function remove(rows) {
-          var _this9 = this;
+          var _this10 = this;
 
           var removeList = this.removeList,
               fullTreeData = this.fullTreeData,
@@ -453,28 +455,28 @@
                   index = matchObj.index,
                   parent = matchObj.parent;
 
-              if (!_this9.isInsertByRow(row)) {
+              if (!_this10.isInsertByRow(row)) {
                 removeList.push(row);
               }
 
               if (parent) {
-                var isExpand = _this9.isTreeExpandByRow(parent);
+                var isExpand = _this10.isTreeExpandByRow(parent);
 
                 if (isExpand) {
-                  _this9.handleCollapsing(parent);
+                  _this10.handleCollapsing(parent);
                 }
 
                 items.splice(index, 1);
 
                 if (isExpand) {
-                  _this9.handleExpanding(parent);
+                  _this10.handleExpanding(parent);
                 }
               } else {
-                _this9.handleCollapsing(item);
+                _this10.handleCollapsing(item);
 
                 items.splice(index, 1);
 
-                _this9.tableData.splice(_this9.tableData.indexOf(item), 1);
+                _this10.tableData.splice(_this10.tableData.indexOf(item), 1);
               }
 
               rest.push(item);
@@ -492,7 +494,7 @@
          * 处理默认展开树节点
          */
         handleDefaultTreeExpand: function handleDefaultTreeExpand() {
-          var _this10 = this;
+          var _this11 = this;
 
           var treeConfig = this.treeConfig,
               treeOpts = this.treeOpts,
@@ -515,7 +517,7 @@
                 var rowChildren = matchObj ? matchObj.item[children] : 0;
 
                 if (rowChildren && rowChildren.length) {
-                  _this10.setTreeExpand(matchObj.item, true);
+                  _this11.setTreeExpand(matchObj.item, true);
                 }
               });
             }
