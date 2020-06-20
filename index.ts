@@ -48,6 +48,11 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
         removeList: []
       }
     },
+    crested () {
+      if (this.keepSource || this.treeOpts.lazy) {
+        console.error('[plugin-virtual-tree] Unsupported parameters.')
+      }
+    },
     computed: {
       vSize (this: any) {
         return this.size || this.$parent.size || this.$parent.vSize

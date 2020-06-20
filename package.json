@@ -1,6 +1,6 @@
 {
   "name": "vxe-table-plugin-virtual-tree",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "基于 vxe-table 表格的增强插件，实现简单的虚拟树表格",
   "scripts": {
     "lib": "gulp build"
@@ -49,7 +49,7 @@
     "prettier": "^1.18.2",
     "typescript": "^3.9.3",
     "vue": "^2.6.11",
-    "vxe-table": "^2.9.11",
+    "vxe-table": "^2.9.13",
     "xe-utils": "^2.4.6"
   },
   "peerDependencies": {

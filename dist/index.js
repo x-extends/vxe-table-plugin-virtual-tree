@@ -82,6 +82,11 @@
           removeList: []
         };
       },
+      crested: function crested() {
+        if (this.keepSource || this.treeOpts.lazy) {
+          console.error('[plugin-virtual-tree] Unsupported parameters.');
+        }
+      },
       computed: {
         vSize: function vSize() {
           return this.size || this.$parent.size || this.$parent.vSize;
