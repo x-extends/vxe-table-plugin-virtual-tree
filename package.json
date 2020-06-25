@@ -1,6 +1,6 @@
 {
   "name": "vxe-table-plugin-virtual-tree",
-  "version": "0.2.5",
+  "version": "0.3.0",
   "description": "基于 vxe-table 表格的增强插件，实现简单的虚拟树表格",
   "scripts": {
     "lib": "gulp build"
@@ -58,7 +58,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xuliangzhan/vxe-table-plugin-virtual-tree.git"
+    "url": "git+https://github.com/x-extends/vxe-table-plugin-virtual-tree.git"
   },
   "keywords": [
     "vxe-table-plugin-virtual-tree"
@@ -69,7 +69,7 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/xuliangzhan/vxe-table-plugin-virtual-tree/issues"
+    "url": "https://github.com/x-extends/vxe-table-plugin-virtual-tree/issues"
   },
-  "homepage": "https://github.com/xuliangzhan/vxe-table-plugin-virtual-tree#readme"
+  "homepage": "https://github.com/x-extends/vxe-table-plugin-virtual-tree#readme"
 }
