@@ -29,7 +29,10 @@ VXETable.use(VXETablePluginVirtualTree)
 * 不支持的参数
   * table.keep-source
   * table.tree-config.lazy
+  * table.tree-config.hasChild
+  * table.tree-config.loadMethod
   * table.tree-config.line
+  * table.expand-config
   * column.type = expand
 
 ## Demo
