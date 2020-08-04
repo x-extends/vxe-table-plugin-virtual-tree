@@ -157,7 +157,7 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
           isAceived = row._X_EXPAND
         }
         if (!trigger || trigger === 'default') {
-          on.click = () => this.toggleTreeExpand(row)
+          on.click = (evnt: Event) => this.triggerTreeExpandEvent(evnt, params)
         }
         return [
           h('div', {
@@ -225,6 +225,12 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
       },
       toggleTreeExpansion (row: any) {
         return this.toggleTreeExpand(row)
+      },
+      triggerTreeExpandEvent (this: any, evnt: Event, params: any) {
+        const { row, column } = params
+        const expanded = !this.isTreeExpandByRow(row)
+        this.setTreeExpand(row, expanded)
+        this.$emit('toggle-tree-expand', { expanded, column, row, $event: evnt })
       },
       toggleTreeExpand (row: any) {
         return this._loadTreeData(this.virtualExpand(row, !row._X_EXPAND))
