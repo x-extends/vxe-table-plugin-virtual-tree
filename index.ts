@@ -423,11 +423,15 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
        * 展开/收起树节点
        */
       virtualExpand (this: any, row: any, expanded: boolean) {
-        if (row._X_EXPAND !== expanded) {
-          if (row._X_EXPAND) {
-            this.handleCollapsing(row)
-          } else {
-            this.handleExpanding(row)
+        const { treeOpts } = this
+        const { toggleMethod } = treeOpts
+        if (!toggleMethod || toggleMethod({ expanded, row })) {
+          if (row._X_EXPAND !== expanded) {
+            if (row._X_EXPAND) {
+              this.handleCollapsing(row)
+            } else {
+              this.handleExpanding(row)
+            }
           }
         }
         return this.tableData
