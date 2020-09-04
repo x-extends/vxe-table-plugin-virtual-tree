@@ -82,8 +82,8 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
       }
     },
     watch: {
-      columns (this: any) {
-        this.loadColumn(this.handleColumns())
+      columns (this: any, value: any[]) {
+        this.handleColumns(value)
       },
       data (this: any, value: any[]) {
         this.loadData(value)
@@ -96,12 +96,15 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
         tableData: [],
         fullTreeRowMap: new Map()
       })
-      this.handleColumns()
+      this.handleColumns(this.columns)
       if (data) {
         this.reloadData(data)
       }
     },
     methods: {
+      loadColumn (this: any, columns: any[]) {
+        return this.$refs.xTable.loadColumn(this.handleColumns(columns))
+      },
       getTableOns (this: any) {
         const { $listeners, proxyConfig, proxyOpts } = this
         const ons: { [key: string]: Function } = {}
@@ -248,16 +251,17 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
       clearTreeExpand () {
         return this.setAllTreeExpand(false)
       },
-      handleColumns (this: any) {
-        return this.columns.map((conf: any) => {
-          if (conf.treeNode) {
-            let slots = conf.slots || {}
-            slots.icon = this.renderTreeIcon
-            slots.line = this.renderTreeLine
-            conf.slots = slots
-          }
-          return conf
-        })
+      handleColumns (this: any, columns: any[]) {
+        const { renderTreeIcon, renderTreeLine } = this
+        if (columns) {
+          const treeNodeColumn = columns.find(conf => conf.treeNode)
+          let slots = treeNodeColumn.slots || {}
+          slots.icon = renderTreeIcon
+          slots.line = renderTreeLine
+          treeNodeColumn.slots = slots
+          return columns
+        }
+        return []
       },
       hasChilds (this: any, row: any) {
         const childList = row[this.treeOpts.children]
