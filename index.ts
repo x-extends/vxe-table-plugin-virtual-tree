@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { CreateElement, VNodeChildren } from 'vue'
-import XEUtils from 'xe-utils/methods/xe-utils'
+import XEUtils from 'xe-utils/ctor'
 import { VXETable } from 'vxe-table/lib/vxe-table'
 /* eslint-enable no-unused-vars */
 
@@ -103,7 +103,24 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
     },
     methods: {
       loadColumn (this: any, columns: any[]) {
-        return this.$refs.xTable.loadColumn(this.handleColumns(columns))
+        return this.$nextTick().then(() => {
+          const { $vxe, $scopedSlots } = this
+          XEUtils.eachTree(columns, column => {
+            if (column.slots) {
+              XEUtils.each(column.slots, (func, name, slots) => {
+                if (!XEUtils.isFunction(func)) {
+                  if ($scopedSlots[func]) {
+                    slots[name] = $scopedSlots[func]
+                  } else {
+                    slots[name] = null
+                    console.error($vxe.t('vxe.error.notSlot'), [func])
+                  }
+                }
+              })
+            }
+          })
+          this.$refs.xTable.loadColumn(this.handleColumns(columns))
+        })
       },
       getTableOns (this: any) {
         const { $listeners, proxyConfig, proxyOpts } = this
