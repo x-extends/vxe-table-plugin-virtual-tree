@@ -6,38 +6,6 @@ import {
 } from 'vxe-table/lib/vxe-table'
 /* eslint-enable no-unused-vars */
 
-function countTreeExpand ($xTree: any, prevRow: any): number {
-  const rowChildren = prevRow[$xTree.treeOpts.children]
-  let count = 1
-  if ($xTree.isTreeExpandByRow(prevRow)) {
-    for (let index = 0; index < rowChildren.length; index++) {
-      count += countTreeExpand($xTree, rowChildren[index])
-    }
-  }
-  return count
-}
-
-function getOffsetSize ($xTree: any): number {
-  switch ($xTree.vSize) {
-    case 'mini':
-      return 3
-    case 'small':
-      return 2
-    case 'medium':
-      return 1
-  }
-  return 0
-}
-
-function calcTreeLine ($table: any, $xTree: any, matchObj: any): number {
-  const { index, items } = matchObj
-  let expandSize = 1
-  if (index) {
-    expandSize = countTreeExpand($xTree, items[index - 1])
-  }
-  return $table.rowHeight * expandSize - (index ? 1 : (12 - getOffsetSize($xTree)))
-}
-
 function hasChilds (_vm: any, row: any) {
   const childList = row[_vm.treeOpts.children]
   return childList && childList.length
@@ -124,12 +92,14 @@ function getPagerSlots (_vm: any) {
 
 function getTableOns (_vm: any) {
   const { $listeners, proxyConfig, proxyOpts } = _vm
-  const ons: any = {}
+  const ons: { [key: string]: Function } = {}
   XEUtils.each($listeners, (cb, type) => {
     ons[type] = (...args: any[]) => {
       _vm.$emit(type, ...args)
     }
   })
+  ons['checkbox-all'] = _vm.checkboxAllEvent
+  ons['checkbox-change'] = _vm.checkboxChangeEvent
   if (proxyConfig) {
     if (proxyOpts.sort) {
       ons['sort-change'] = _vm.sortChangeEvent
@@ -139,6 +109,10 @@ function getTableOns (_vm: any) {
     }
   }
   return ons
+}
+
+function errorLog (log: string, args?: any) {
+  console.error(args ? XEUtils.template(log, args) : log)
 }
 
 declare module 'vxe-table/lib/vxe-table' {
@@ -162,11 +136,6 @@ function registerComponent (vxetable: typeof VXETable) {
         removeList: []
       }
     },
-    crested (this: any) {
-      if (this.keepSource) {
-        console.error('[plugin-virtual-tree] Unsupported parameters.')
-      }
-    },
     computed: {
       treeOpts (this: any) {
         return Object.assign({}, GlobalConfig.table.treeConfig, this.treeConfig)
@@ -179,6 +148,9 @@ function registerComponent (vxetable: typeof VXETable) {
         propKeys.forEach(key => {
           rest[key] = this[key]
         })
+        if (rest.checkboxConfig) {
+          rest.checkboxConfig = this.checkboxOpts
+        }
         return rest
       }
     },
@@ -191,12 +163,19 @@ function registerComponent (vxetable: typeof VXETable) {
       }
     },
     created (this: any) {
-      const { data } = this
+      const { $vxe, treeOpts, data } = this
       Object.assign(this, {
         fullTreeData: [],
         tableData: [],
         fullTreeRowMap: new Map()
       })
+      if (this.keepSource) {
+        errorLog('[plugin-virtual-tree] Unsupported parameters.')
+      }
+      if (treeOpts.line) {
+        errorLog($vxe.t('vxe.error.notProp'), ['checkbox-config.line'])
+        return []
+      }
       this.handleColumns(this.columns)
       if (data) {
         this.reloadData(data)
@@ -291,8 +270,14 @@ function registerComponent (vxetable: typeof VXETable) {
     methods: {
       loadColumn (this: any, columns: any[]) {
         return this.$nextTick().then(() => {
-          const { $vxe, $scopedSlots } = this
+          const { $vxe, $scopedSlots, renderTreeIcon } = this
           XEUtils.eachTree(columns, column => {
+            if (column.treeNode) {
+              if (!column.slots) {
+                column.slots = {}
+              }
+              column.slots.icon = renderTreeIcon
+            }
             if (column.slots) {
               XEUtils.each(column.slots, (func, name, slots) => {
                 if (!XEUtils.isFunction(func)) {
@@ -300,38 +285,14 @@ function registerComponent (vxetable: typeof VXETable) {
                     slots[name] = $scopedSlots[func]
                   } else {
                     slots[name] = null
-                    console.error($vxe.t('vxe.error.notSlot'), [func])
+                    errorLog($vxe.t('vxe.error.notSlot'), [func])
                   }
                 }
               })
             }
           })
-          this.$refs.xTable.loadColumn(this.handleColumns(columns))
+          this.$refs.xTable.loadColumn(columns)
         })
-      },
-      renderTreeLine (this: any, params: any, h: CreateElement) {
-        const { treeConfig, treeOpts, fullTreeRowMap } = this
-        const { $table, row, column } = params
-        const { treeNode } = column
-        if (treeNode && treeConfig && treeOpts.line) {
-          const $xTree = this
-          const rowLevel = row._X_LEVEL
-          const matchObj = fullTreeRowMap.get(row)
-          return [
-            treeNode && treeOpts.line ? h('div', {
-              class: 'vxe-tree--line-wrapper'
-            }, [
-              h('div', {
-                class: 'vxe-tree--line',
-                style: {
-                  height: `${calcTreeLine($table, $xTree, matchObj)}px`,
-                  left: `${rowLevel * (treeOpts.indent || 20) + (rowLevel ? 2 - getOffsetSize($xTree) : 0) + 16}px`
-                }
-              })
-            ]) : null
-          ]
-        }
-        return []
       },
       renderTreeIcon (this: any, params: any, h: CreateElement, cellVNodes: VNodeChildren) {
         const { treeOpts } = this
@@ -501,12 +462,15 @@ function registerComponent (vxetable: typeof VXETable) {
         return this.setAllTreeExpand(false)
       },
       handleColumns (this: any, columns: any[]) {
-        const { renderTreeIcon, renderTreeLine } = this
+        const { $vxe, renderTreeIcon, checkboxOpts } = this
         if (columns) {
+          if ((!checkboxOpts.checkField || !checkboxOpts.halfField) && columns.some(conf => conf.type === 'checkbox')) {
+            errorLog($vxe.t('vxe.error.reqProp'), ['checkbox-config.checkField | checkbox-config.halfField'])
+            return []
+          }
           const treeNodeColumn = columns.find(conf => conf.treeNode)
           let slots = treeNodeColumn.slots || {}
           slots.icon = renderTreeIcon
-          slots.line = renderTreeLine
           treeNodeColumn.slots = slots
           return columns
         }
@@ -744,8 +708,8 @@ function registerComponent (vxetable: typeof VXETable) {
         return this.tableData
       },
       checkboxAllEvent (this: any, params: any) {
-        const { checkboxConfig = {}, treeOpts } = this
-        const { checkField, halfField, checkStrictly } = checkboxConfig
+        const { checkboxOpts, treeOpts } = this
+        const { checkField, halfField, checkStrictly } = checkboxOpts
         const { checked } = params
         if (checkField && !checkStrictly) {
           XEUtils.eachTree(this.fullTreeData, row => {
@@ -758,8 +722,8 @@ function registerComponent (vxetable: typeof VXETable) {
         this.$emit('checkbox-all', params)
       },
       checkboxChangeEvent (this: any, params: any) {
-        const { checkboxConfig = {}, treeOpts } = this
-        const { checkField, halfField, checkStrictly } = checkboxConfig
+        const { checkboxOpts, treeOpts } = this
+        const { checkField, halfField, checkStrictly } = checkboxOpts
         const { row, checked } = params
         if (checkField && !checkStrictly) {
           XEUtils.eachTree([row], row => {
@@ -773,9 +737,9 @@ function registerComponent (vxetable: typeof VXETable) {
         this.$emit('checkbox-change', params)
       },
       checkParentNodeSelection (this: any, row: any) {
-        const { checkboxConfig = {}, treeOpts } = this
+        const { checkboxOpts, treeOpts } = this
         const { children } = treeOpts
-        const { checkField, halfField, checkStrictly } = checkboxConfig
+        const { checkField, halfField, checkStrictly } = checkboxOpts
         const matchObj = XEUtils.findTree(this.fullTreeData, item => item === row, treeOpts)
         if (matchObj && checkField && !checkStrictly) {
           const parentRow = matchObj.parent
@@ -792,8 +756,8 @@ function registerComponent (vxetable: typeof VXETable) {
         }
       },
       getCheckboxRecords (this: any) {
-        const { checkboxConfig = {}, treeOpts } = this
-        const { checkField } = checkboxConfig
+        const { checkboxOpts, treeOpts } = this
+        const { checkField } = checkboxOpts
         if (checkField) {
           const records: any[] = []
           XEUtils.eachTree(this.fullTreeData, row => {
@@ -806,8 +770,8 @@ function registerComponent (vxetable: typeof VXETable) {
         return this.$refs.xTable.getCheckboxRecords()
       },
       getCheckboxIndeterminateRecords (this: any) {
-        const { checkboxConfig = {}, treeOpts } = this
-        const { halfField } = checkboxConfig
+        const { checkboxOpts, treeOpts } = this
+        const { halfField } = checkboxOpts
         if (halfField) {
           const records: any[] = []
           XEUtils.eachTree(this.fullTreeData, row => {
