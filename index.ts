@@ -36,6 +36,109 @@ function calcTreeLine ($table: any, $xTree: any, matchObj: any): number {
   return $table.rowHeight * expandSize - (index ? 1 : (12 - getOffsetSize($xTree)))
 }
 
+function hasChilds (_vm: any, row: any) {
+  const childList = row[_vm.treeOpts.children]
+  return childList && childList.length
+}
+
+function renderDefaultForm (h: CreateElement, _vm: any) {
+  const { proxyConfig, proxyOpts, formData, formConfig, formOpts } = _vm
+  if (formOpts.items && formOpts.items.length) {
+    if (!formOpts.inited) {
+      formOpts.inited = true
+      if (proxyOpts && proxyOpts.beforeItem) {
+        formOpts.items.forEach((item: any) => {
+          proxyOpts.beforeItem.apply(_vm, [{ $grid: _vm, item }])
+        })
+      }
+    }
+    return [
+      h('vxe-form', {
+        props: Object.assign({}, formOpts, {
+          data: proxyConfig && proxyOpts.form ? formData : formConfig.data
+        }),
+        on: {
+          submit: _vm.submitEvent,
+          reset: _vm.resetEvent,
+          'submit-invalid': _vm.submitInvalidEvent,
+          'toggle-collapse': _vm.togglCollapseEvent
+        },
+        ref: 'form'
+      })
+    ]
+  }
+  return []
+}
+
+function getToolbarSlots (_vm: any) {
+  const { $scopedSlots, toolbarOpts } = _vm
+  const toolbarOptSlots = toolbarOpts.slots
+  let $buttons
+  let $tools
+  const slots: any = {}
+  if (toolbarOptSlots) {
+    $buttons = toolbarOptSlots.buttons
+    $tools = toolbarOptSlots.tools
+    if ($buttons && $scopedSlots[$buttons]) {
+      $buttons = $scopedSlots[$buttons]
+    }
+    if ($tools && $scopedSlots[$tools]) {
+      $tools = $scopedSlots[$tools]
+    }
+  }
+  if ($buttons) {
+    slots.buttons = $buttons
+  }
+  if ($tools) {
+    slots.tools = $tools
+  }
+  return slots
+}
+
+function getPagerSlots (_vm: any) {
+  const { $scopedSlots, pagerOpts } = _vm
+  const pagerOptSlots = pagerOpts.slots
+  const slots: any = {}
+  let $left
+  let $right
+  if (pagerOptSlots) {
+    $left = pagerOptSlots.left
+    $right = pagerOptSlots.right
+    if ($left && $scopedSlots[$left]) {
+      $left = $scopedSlots[$left]
+    }
+    if ($right && $scopedSlots[$right]) {
+      $right = $scopedSlots[$right]
+    }
+  }
+  if ($left) {
+    slots.left = $left
+  }
+  if ($right) {
+    slots.right = $right
+  }
+  return slots
+}
+
+function getTableOns (_vm: any) {
+  const { $listeners, proxyConfig, proxyOpts } = _vm
+  const ons: any = {}
+  XEUtils.each($listeners, (cb, type) => {
+    ons[type] = (...args: any[]) => {
+      _vm.$emit(type, ...args)
+    }
+  })
+  if (proxyConfig) {
+    if (proxyOpts.sort) {
+      ons['sort-change'] = _vm.sortChangeEvent
+    }
+    if (proxyOpts.filter) {
+      ons['filter-change'] = _vm.filterChangeEvent
+    }
+  }
+  return ons
+}
+
 function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
   const GlobalConfig = setup()
   const propKeys = Object.keys(Table.props).filter(name => ['data', 'treeConfig'].indexOf(name) === -1)
@@ -49,29 +152,16 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
       }
     },
     crested () {
-      if (this.keepSource || this.treeOpts.lazy) {
+      if (this.keepSource) {
         console.error('[plugin-virtual-tree] Unsupported parameters.')
       }
     },
     computed: {
-      vSize (this: any) {
-        return this.size || this.$parent.size || this.$parent.vSize
-      },
       treeOpts (this: any) {
-        return Object.assign({
-          children: 'children',
-          hasChild: 'hasChild',
-          indent: 20
-        }, GlobalConfig.treeConfig, this.treeConfig)
+        return Object.assign({}, GlobalConfig.table.treeConfig, this.treeConfig)
       },
-      renderClass (this: any) {
-        const { vSize } = this
-        return ['vxe-grid vxe-virtual-tree', {
-          [`size--${vSize}`]: vSize,
-          't--animat': this.animat,
-          'has--tree-line': this.treeConfig && this.treeOpts.line,
-          'is--maximize': this.isMaximized()
-        }]
+      checkboxOpts (this: any) {
+        return Object.assign({}, GlobalConfig.table.checkboxConfig, this.checkboxConfig)
       },
       tableExtendProps (this: any) {
         let rest: any = {}
@@ -101,6 +191,92 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
         this.reloadData(data)
       }
     },
+    render (this: any, h: CreateElement) {
+      const { $scopedSlots, vSize, isZMax } = this
+      const hasForm = !!($scopedSlots.form || this.formConfig)
+      const hasToolbar = !!($scopedSlots.toolbar || this.toolbar)
+      const hasTop = !!$scopedSlots.top
+      const hasBottom = !!$scopedSlots.bottom
+      const hasPager = !!($scopedSlots.pager || this.pagerConfig)
+      return h('div', {
+        class: ['vxe-grid', 'vxe-virtual-tree', {
+          [`size--${vSize}`]: vSize,
+          't--animat': !!this.animat,
+          'is--round': this.round,
+          'is--maximize': isZMax,
+          'is--loading': this.isCloak || this.loading || this.tableLoading
+        }],
+        style: this.renderStyle
+      }, [
+        /**
+         * 渲染表单
+         */
+        hasForm ? h('div', {
+          ref: 'formWrapper',
+          class: 'vxe-grid--form-wrapper'
+        }, $scopedSlots.form
+          ? $scopedSlots.form.call(this, { $grid: this }, h)
+          : renderDefaultForm(h, this)
+        ) : null,
+        /**
+         * 渲染工具栏
+         */
+        hasToolbar ? h('div', {
+          ref: 'toolbarWrapper',
+          class: 'vxe-grid--toolbar-wrapper'
+        }, $scopedSlots.toolbar
+          ? $scopedSlots.toolbar.call(this, { $grid: this }, h)
+          : [
+            h('vxe-toolbar', {
+              props: this.toolbarOpts,
+              ref: 'xToolbar',
+              scopedSlots: getToolbarSlots(this)
+            })
+          ]
+        ) : null,
+        /**
+         * 渲染表格顶部区域
+         */
+        hasTop ? h('div', {
+          ref: 'topWrapper',
+          class: 'vxe-grid--top-wrapper'
+        }, $scopedSlots.top.call(this, { $grid: this }, h)) : null,
+        /**
+         * 渲染表格
+         */
+        h('vxe-table', {
+          props: this.tableProps,
+          on: getTableOns(this),
+          scopedSlots: $scopedSlots,
+          ref: 'xTable'
+        }, this.$slots.default),
+        /**
+         * 渲染表格底部区域
+         */
+        hasBottom ? h('div', {
+          ref: 'bottomWrapper',
+          class: 'vxe-grid--bottom-wrapper'
+        }, $scopedSlots.bottom.call(this, { $grid: this }, h)) : null,
+        /**
+         * 渲染分页
+         */
+        hasPager ? h('div', {
+          ref: 'pagerWrapper',
+          class: 'vxe-grid--pager-wrapper'
+        }, $scopedSlots.pager
+          ? $scopedSlots.pager.call(this, { $grid: this }, h)
+          : [
+            h('vxe-pager', {
+              props: this.pagerProps,
+              on: {
+                'page-change': this.pageChangeEvent
+              },
+              scopedSlots: getPagerSlots(this)
+            })
+          ]
+        ) : null
+      ])
+    },
     methods: {
       loadColumn (this: any, columns: any[]) {
         return this.$nextTick().then(() => {
@@ -121,26 +297,6 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
           })
           this.$refs.xTable.loadColumn(this.handleColumns(columns))
         })
-      },
-      getTableOns (this: any) {
-        const { $listeners, proxyConfig, proxyOpts } = this
-        const ons: { [key: string]: Function } = {}
-        XEUtils.each($listeners, (cb, type) => {
-          ons[type] = (...args: any[]) => {
-            this.$emit(type, ...args)
-          }
-        })
-        ons['checkbox-all'] = this.checkboxAllEvent
-        ons['checkbox-change'] = this.checkboxChangeEvent
-        if (proxyConfig) {
-          if (proxyOpts.sort) {
-            ons['sort-change'] = this.sortChangeEvent
-          }
-          if (proxyOpts.filter) {
-            ons['filter-change'] = this.filterChangeEvent
-          }
-        }
-        return ons
       },
       renderTreeLine (this: any, params: any, h: CreateElement) {
         const { treeConfig, treeOpts, fullTreeRowMap } = this
@@ -167,14 +323,20 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
         return []
       },
       renderTreeIcon (this: any, params: any, h: CreateElement, cellVNodes: VNodeChildren) {
-        let { isHidden } = params
-        let { row } = params
-        let { children, indent, trigger, iconOpen, iconClose } = this.treeOpts
-        let rowChildren = row[children]
+        const { treeOpts } = this
+        let { isHidden, row } = params
+        const { children, hasChild, indent, lazy, trigger, iconLoaded, showIcon, iconOpen, iconClose } = treeOpts
+        let rowChilds = row[children]
+        let hasLazyChilds = false
         let isAceived = false
+        let isLazyLoaded = false
         let on: any = {}
         if (!isHidden) {
           isAceived = row._X_EXPAND
+          if (lazy) {
+            isLazyLoaded = row._X_LOADING
+            hasLazyChilds = row[hasChild]
+          }
         }
         if (!trigger || trigger === 'default') {
           on.click = (evnt: Event) => this.triggerTreeExpandEvent(evnt, params)
@@ -188,13 +350,13 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
               paddingLeft: `${row._X_LEVEL * indent}px`
             }
           }, [
-            rowChildren && rowChildren.length ? [
+            showIcon && ((rowChilds && rowChilds.length) || hasLazyChilds) ? [
               h('div', {
                 class: 'vxe-tree--btn-wrapper',
                 on
               }, [
                 h('i', {
-                  class: ['vxe-tree--node-btn', isAceived ? (iconOpen || GlobalConfig.icon.TABLE_TREE_OPEN) : (iconClose || GlobalConfig.icon.TABLE_TREE_CLOSE)]
+                  class: ['vxe-tree--node-btn', isLazyLoaded ? (iconLoaded || GlobalConfig.icon.TABLE_TREE_LOADED) : (isAceived ? (iconOpen || GlobalConfig.icon.TABLE_TREE_OPEN) : (iconClose || GlobalConfig.icon.TABLE_TREE_CLOSE))]
                 })
               ])
             ] : null,
@@ -228,14 +390,70 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
       setTreeExpansion (rows: any, expanded: any) {
         return this.setTreeExpand(rows, expanded)
       },
+      handleAsyncTreeExpandChilds (this: any, row: any) {
+        const { treeOpts, checkboxOpts } = this
+        const { loadMethod, children } = treeOpts
+        const { checkStrictly } = checkboxOpts
+        return new Promise(resolve => {
+          row._X_LOADING = true
+          loadMethod({ $table: this, row }).catch(() => []).then((childs: any[]) => {
+            row._X_LOADED = true
+            row._X_LOADING = false
+            if (!XEUtils.isArray(childs)) {
+              childs = []
+            }
+            if (childs) {
+              row[children] = childs
+              if (childs.length && !row._X_EXPAND) {
+                this.virtualExpand(row, true)
+              }
+              // 如果当前节点已选中，则展开后子节点也被选中
+              if (!checkStrictly && this.isCheckedByCheckboxRow(row)) {
+                this.setCheckboxRow(childs, true)
+              }
+            }
+            resolve(this.$nextTick().then(this.recalculate))
+          })
+        })
+      },
       setTreeExpand (this: any, rows: any, expanded: any) {
+        const { treeOpts, tableFullData, treeNodeColumn } = this
+        const { lazy, hasChild, accordion, toggleMethod } = treeOpts
+        const result: any[] = []
         if (rows) {
           if (!XEUtils.isArray(rows)) {
             rows = [rows]
           }
-          rows.forEach((row: any) => this.virtualExpand(row, !!expanded))
+          let validRows = toggleMethod ? rows.filter((row: any) => toggleMethod({ expanded, column: treeNodeColumn, row })) : rows
+          if (accordion) {
+            validRows = validRows.length ? [validRows[validRows.length - 1]] : []
+            // 同一级只能展开一个
+            const matchObj = XEUtils.findTree(tableFullData, item => item === rows[0], treeOpts)
+            if (matchObj) {
+              matchObj.items.forEach(row => {
+                row._X_EXPAND = false
+              })
+            }
+          }
+          validRows.forEach((row: any) => {
+            if (!row._X_LOADING) {
+              const isLoad = lazy && row[hasChild] && !row._X_LOADED && !row._X_LOADING
+              // 是否使用懒加载
+              if (isLoad) {
+                result.push(this.handleAsyncTreeExpandChilds(row))
+              } else {
+                if (hasChilds(this, row)) {
+                  this.virtualExpand(row, !!expanded)
+                }
+              }
+            }
+          })
+          return Promise.all(result).then(() => {
+            this._loadTreeData(this.tableData)
+            return this.recalculate()
+          })
         }
-        return this._loadTreeData(this.tableData)
+        return this.$nextTick()
       },
       setAllTreeExpansion (expanded: any) {
         return this.setAllTreeExpand(expanded)
@@ -247,19 +465,22 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
         return this.toggleTreeExpand(row)
       },
       triggerTreeExpandEvent (this: any, evnt: Event, params: any) {
+        const { treeOpts } = this
         const { row, column } = params
-        const expanded = !this.isTreeExpandByRow(row)
-        this.setTreeExpand(row, expanded)
-        this.$emit('toggle-tree-expand', { expanded, column, row, $event: evnt })
+        const { lazy } = treeOpts
+        if (!lazy || !row._X_LOADING) {
+          const expanded = !this.isTreeExpandByRow(row)
+          this.setTreeExpand(row, expanded)
+          this.$emit('toggle-tree-expand', { expanded, column, row, $event: evnt })
+        }
       },
       toggleTreeExpand (row: any) {
         return this._loadTreeData(this.virtualExpand(row, !row._X_EXPAND))
       },
       getTreeExpandRecords (this: any) {
-        const hasChilds = this.hasChilds
         const treeExpandRecords: any[] = []
         XEUtils.eachTree(this.fullTreeData, row => {
-          if (row._X_EXPAND && hasChilds(row)) {
+          if (row._X_EXPAND && hasChilds(this, row)) {
             treeExpandRecords.push(row)
           }
         }, this.treeOpts)
@@ -279,10 +500,6 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
           return columns
         }
         return []
-      },
-      hasChilds (this: any, row: any) {
-        const childList = row[this.treeOpts.children]
-        return childList && childList.length
       },
       /**
        * 获取表格数据集，包含新增、删除、修改
@@ -315,6 +532,8 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
           records = [records]
         }
         let newRecords = records.map((record: any) => this.defineField(Object.assign({
+          _X_LOADING: false,
+          _X_LOADED: false,
           _X_EXPAND: false,
           _X_INSERT: true,
           _X_LEVEL: 0
@@ -431,6 +650,8 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
         let fullTreeRowMap = this.fullTreeRowMap
         fullTreeRowMap.clear()
         XEUtils.eachTree(treeData, (item, index, items, paths, parent, nodes) => {
+          item._X_LOADING = false
+          item._X_LOADED = false
           item._X_EXPAND = false
           item._X_INSERT = false
           item._X_LEVEL = nodes.length - 1
@@ -459,7 +680,7 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
       },
       // 展开节点
       handleExpanding (this: any, row: any) {
-        if (this.hasChilds(row)) {
+        if (hasChilds(this, row)) {
           const { tableData, treeOpts } = this
           let childRows = row[treeOpts.children]
           let expandList: any[] = []
@@ -479,7 +700,7 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
       },
       // 收起节点
       handleCollapsing (this: any, row: any) {
-        if (this.hasChilds(row)) {
+        if (hasChilds(this, row)) {
           const { tableData, treeOpts } = this
           let childRows = row[treeOpts.children]
           let nodeChildList: any[] = []
