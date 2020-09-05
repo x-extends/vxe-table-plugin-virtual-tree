@@ -1,7 +1,9 @@
 /* eslint-disable no-unused-vars */
-import { CreateElement, VNodeChildren } from 'vue'
+import Vue, { CreateElement, VNodeChildren } from 'vue'
 import XEUtils from 'xe-utils/ctor'
-import { VXETable } from 'vxe-table/lib/vxe-table'
+import {
+  VXETable
+} from 'vxe-table/lib/vxe-table'
 /* eslint-enable no-unused-vars */
 
 function countTreeExpand ($xTree: any, prevRow: any): number {
@@ -139,7 +141,16 @@ function getTableOns (_vm: any) {
   return ons
 }
 
-function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
+declare module 'vxe-table/lib/vxe-table' {
+  interface VXETableStatic {
+    Vue: typeof Vue;
+    Grid: any;
+    Table: any;
+  }
+}
+
+function registerComponent (vxetable: typeof VXETable) {
+  const { Vue, Table, Grid, setup, t } = vxetable
   const GlobalConfig = setup()
   const propKeys = Object.keys(Table.props).filter(name => ['data', 'treeConfig'].indexOf(name) === -1)
 
@@ -151,7 +162,7 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
         removeList: []
       }
     },
-    crested () {
+    crested (this: any) {
       if (this.keepSource) {
         console.error('[plugin-virtual-tree] Unsupported parameters.')
       }
@@ -818,9 +829,9 @@ function registerComponent ({ Vue, Table, Grid, setup, t }: any) {
  * 基于 vxe-table 表格的增强插件，实现简单的虚拟树表格
  */
 export const VXETablePluginVirtualTree = {
-  install (xtable: typeof VXETable) {
+  install (vxetable: typeof VXETable) {
     // 注册组件
-    registerComponent(xtable)
+    registerComponent(vxetable)
   }
 }
 
