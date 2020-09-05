@@ -171,10 +171,10 @@ function registerComponent (vxetable: typeof VXETable) {
         fullTreeRowMap: new Map()
       })
       if (this.keepSource) {
-        errorLog('[plugin-virtual-tree] Unsupported parameters.')
+        errorLog($vxe.t('vxe.error.notProp'), ['table.keep-source'])
       }
       if (treeOpts.line) {
-        errorLog($vxe.t('vxe.error.notProp'), ['checkbox-config.line'])
+        errorLog($vxe.t('vxe.error.notProp'), ['table.checkbox-config.line'])
         return []
       }
       this.handleColumns(this.columns)
@@ -471,7 +471,7 @@ function registerComponent (vxetable: typeof VXETable) {
         const { $vxe, renderTreeIcon, checkboxOpts } = this
         if (columns) {
           if ((!checkboxOpts.checkField || !checkboxOpts.halfField) && columns.some(conf => conf.type === 'checkbox')) {
-            errorLog($vxe.t('vxe.error.reqProp'), ['checkbox-config.checkField | checkbox-config.halfField'])
+            errorLog($vxe.t('vxe.error.reqProp'), ['table.checkbox-config.checkField | table.checkbox-config.halfField'])
             return []
           }
           const treeNodeColumn = columns.find(conf => conf.treeNode)
