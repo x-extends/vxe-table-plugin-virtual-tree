@@ -133,7 +133,8 @@ function registerComponent (vxetable: typeof VXETable) {
     extends: Grid,
     data () {
       return {
-        removeList: []
+        removeList: [],
+        treeLazyLoadeds: []
       }
     },
     computed: {
@@ -270,7 +271,7 @@ function registerComponent (vxetable: typeof VXETable) {
     methods: {
       loadColumn (this: any, columns: any[]) {
         return this.$nextTick().then(() => {
-          const { $vxe, $scopedSlots, renderTreeIcon } = this
+          const { $vxe, $scopedSlots, renderTreeIcon, treeOpts } = this
           XEUtils.eachTree(columns, column => {
             if (column.treeNode) {
               if (!column.slots) {
@@ -290,12 +291,12 @@ function registerComponent (vxetable: typeof VXETable) {
                 }
               })
             }
-          })
+          }, treeOpts)
           this.$refs.xTable.loadColumn(columns)
         })
       },
       renderTreeIcon (this: any, params: any, h: CreateElement, cellVNodes: VNodeChildren) {
-        const { treeOpts } = this
+        const { treeLazyLoadeds, treeOpts } = this
         let { isHidden, row } = params
         const { children, hasChild, indent, lazy, trigger, iconLoaded, showIcon, iconOpen, iconClose } = treeOpts
         let rowChilds = row[children]
@@ -306,7 +307,7 @@ function registerComponent (vxetable: typeof VXETable) {
         if (!isHidden) {
           isAceived = row._X_EXPAND
           if (lazy) {
-            isLazyLoaded = row._X_LOADING
+            isLazyLoaded = treeLazyLoadeds.indexOf(row) > -1
             hasLazyChilds = row[hasChild]
           }
         }
@@ -363,19 +364,25 @@ function registerComponent (vxetable: typeof VXETable) {
         return this.setTreeExpand(rows, expanded)
       },
       handleAsyncTreeExpandChilds (this: any, row: any) {
-        const { treeOpts, checkboxOpts } = this
+        const { treeLazyLoadeds, treeOpts, checkboxOpts } = this
         const { loadMethod, children } = treeOpts
         const { checkStrictly } = checkboxOpts
         return new Promise(resolve => {
-          row._X_LOADING = true
+          treeLazyLoadeds.push(row)
           loadMethod({ $table: this, row }).catch(() => []).then((childs: any[]) => {
             row._X_LOADED = true
-            row._X_LOADING = false
+            XEUtils.remove(treeLazyLoadeds, item => item === row)
             if (!XEUtils.isArray(childs)) {
               childs = []
             }
             if (childs) {
-              row[children] = childs
+              row[children] = childs.map(item => {
+                item._X_LOADED = false
+                item._X_EXPAND = false
+                item._X_INSERT = false
+                item._X_LEVEL = row._X_LEVEL + 1
+                return item
+              })
               if (childs.length && !row._X_EXPAND) {
                 this.virtualExpand(row, true)
               }
@@ -389,7 +396,7 @@ function registerComponent (vxetable: typeof VXETable) {
         })
       },
       setTreeExpand (this: any, rows: any, expanded: any) {
-        const { treeOpts, tableFullData, treeNodeColumn } = this
+        const { treeLazyLoadeds, treeOpts, tableFullData, treeNodeColumn } = this
         const { lazy, hasChild, accordion, toggleMethod } = treeOpts
         const result: any[] = []
         if (rows) {
@@ -408,15 +415,13 @@ function registerComponent (vxetable: typeof VXETable) {
             }
           }
           validRows.forEach((row: any) => {
-            if (!row._X_LOADING) {
-              const isLoad = lazy && row[hasChild] && !row._X_LOADED && !row._X_LOADING
-              // 是否使用懒加载
-              if (isLoad) {
-                result.push(this.handleAsyncTreeExpandChilds(row))
-              } else {
-                if (hasChilds(this, row)) {
-                  this.virtualExpand(row, !!expanded)
-                }
+            const isLoad = lazy && row[hasChild] && !row._X_LOADED && treeLazyLoadeds.indexOf(row) === -1
+            // 是否使用懒加载
+            if (expanded && isLoad) {
+              result.push(this.handleAsyncTreeExpandChilds(row))
+            } else {
+              if (hasChilds(this, row)) {
+                this.virtualExpand(row, !!expanded)
               }
             }
           })
@@ -437,10 +442,10 @@ function registerComponent (vxetable: typeof VXETable) {
         return this.toggleTreeExpand(row)
       },
       triggerTreeExpandEvent (this: any, evnt: Event, params: any) {
-        const { treeOpts } = this
+        const { treeOpts, treeLazyLoadeds } = this
         const { row, column } = params
         const { lazy } = treeOpts
-        if (!lazy || !row._X_LOADING) {
+        if (!lazy || treeLazyLoadeds.indexOf(row) === -1) {
           const expanded = !this.isTreeExpandByRow(row)
           this.setTreeExpand(row, expanded)
           this.$emit('toggle-tree-expand', { expanded, column, row, $event: evnt })
@@ -450,12 +455,13 @@ function registerComponent (vxetable: typeof VXETable) {
         return this._loadTreeData(this.virtualExpand(row, !row._X_EXPAND))
       },
       getTreeExpandRecords (this: any) {
+        const { treeOpts } = this
         const treeExpandRecords: any[] = []
         XEUtils.eachTree(this.fullTreeData, row => {
           if (row._X_EXPAND && hasChilds(this, row)) {
             treeExpandRecords.push(row)
           }
-        }, this.treeOpts)
+        }, treeOpts)
         return treeExpandRecords
       },
       clearTreeExpand () {
@@ -490,12 +496,13 @@ function registerComponent (vxetable: typeof VXETable) {
         return !!row._X_INSERT
       },
       getInsertRecords (this: any) {
+        const { treeOpts } = this
         const insertRecords: any[] = []
         XEUtils.eachTree(this.fullTreeData, row => {
           if (row._X_INSERT) {
             insertRecords.push(row)
           }
-        }, this.treeOpts)
+        }, treeOpts)
         return insertRecords
       },
       insert (this: any, records: any) {
@@ -507,7 +514,6 @@ function registerComponent (vxetable: typeof VXETable) {
           records = [records]
         }
         let newRecords = records.map((record: any) => this.defineField(Object.assign({
-          _X_LOADING: false,
           _X_LOADED: false,
           _X_EXPAND: false,
           _X_INSERT: true,
@@ -622,16 +628,16 @@ function registerComponent (vxetable: typeof VXETable) {
        * 定义树属性
        */
       toVirtualTree (this: any, treeData: any[]) {
+        const { treeOpts } = this
         let fullTreeRowMap = this.fullTreeRowMap
         fullTreeRowMap.clear()
         XEUtils.eachTree(treeData, (item, index, items, paths, parent, nodes) => {
-          item._X_LOADING = false
           item._X_LOADED = false
           item._X_EXPAND = false
           item._X_INSERT = false
           item._X_LEVEL = nodes.length - 1
           fullTreeRowMap.set(item, { item, index, items, paths, parent, nodes })
-        })
+        }, treeOpts)
         this.fullTreeData = treeData.slice(0)
         this.tableData = treeData.slice(0)
         return treeData
