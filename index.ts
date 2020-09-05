@@ -167,7 +167,7 @@ function registerComponent (vxetable: typeof VXETable) {
       const { $vxe, treeOpts, data } = this
       Object.assign(this, {
         fullTreeData: [],
-        tableData: [],
+        treeTableData: [],
         fullTreeRowMap: new Map()
       })
       if (this.keepSource) {
@@ -426,7 +426,7 @@ function registerComponent (vxetable: typeof VXETable) {
             }
           })
           return Promise.all(result).then(() => {
-            this._loadTreeData(this.tableData)
+            this._loadTreeData(this.treeTableData)
             return this.recalculate()
           })
         }
@@ -509,7 +509,7 @@ function registerComponent (vxetable: typeof VXETable) {
         return this.insertAt(records)
       },
       insertAt (this: any, records: any, row: any) {
-        const { fullTreeData, tableData, treeOpts } = this
+        const { fullTreeData, treeTableData, treeOpts } = this
         if (!XEUtils.isArray(records)) {
           records = [records]
         }
@@ -521,20 +521,20 @@ function registerComponent (vxetable: typeof VXETable) {
         }, record)))
         if (!row) {
           fullTreeData.unshift.apply(fullTreeData, newRecords)
-          tableData.unshift.apply(tableData, newRecords)
+          treeTableData.unshift.apply(treeTableData, newRecords)
         } else {
           if (row === -1) {
             fullTreeData.push.apply(fullTreeData, newRecords)
-            tableData.push.apply(tableData, newRecords)
+            treeTableData.push.apply(treeTableData, newRecords)
           } else {
             let matchObj = XEUtils.findTree(fullTreeData, item => item === row, treeOpts)
             if (!matchObj || matchObj.index === -1) {
               throw new Error(t('vxe.error.unableInsert'))
             }
             let { items, index, nodes }: any = matchObj
-            let rowIndex = tableData.indexOf(row)
+            let rowIndex = treeTableData.indexOf(row)
             if (rowIndex > -1) {
-              tableData.splice.apply(tableData, [rowIndex, 0].concat(newRecords))
+              treeTableData.splice.apply(treeTableData, [rowIndex, 0].concat(newRecords))
             }
             items.splice.apply(items, [index, 0].concat(newRecords))
             newRecords.forEach((item: any) => {
@@ -542,7 +542,7 @@ function registerComponent (vxetable: typeof VXETable) {
             })
           }
         }
-        return this._loadTreeData(tableData).then(() => {
+        return this._loadTreeData(treeTableData).then(() => {
           return {
             row: newRecords.length ? newRecords[newRecords.length - 1] : null,
             rows: newRecords
@@ -594,12 +594,12 @@ function registerComponent (vxetable: typeof VXETable) {
             } else {
               this.handleCollapsing(item)
               items.splice(index, 1)
-              this.tableData.splice(this.tableData.indexOf(item), 1)
+              this.treeTableData.splice(this.treeTableData.indexOf(item), 1)
             }
             rest.push(item)
           }
         })
-        return this._loadTreeData(this.tableData).then(() => {
+        return this._loadTreeData(this.treeTableData).then(() => {
           return { row: rest.length ? rest[rest.length - 1] : null, rows: rest }
         })
       },
@@ -639,7 +639,7 @@ function registerComponent (vxetable: typeof VXETable) {
           fullTreeRowMap.set(item, { item, index, items, paths, parent, nodes })
         }, treeOpts)
         this.fullTreeData = treeData.slice(0)
-        this.tableData = treeData.slice(0)
+        this.treeTableData = treeData.slice(0)
         return treeData
       },
       /**
@@ -657,15 +657,15 @@ function registerComponent (vxetable: typeof VXETable) {
             }
           }
         }
-        return this.tableData
+        return this.treeTableData
       },
       // 展开节点
       handleExpanding (this: any, row: any) {
         if (hasChilds(this, row)) {
-          const { tableData, treeOpts } = this
+          const { treeTableData, treeOpts } = this
           let childRows = row[treeOpts.children]
           let expandList: any[] = []
-          let rowIndex = tableData.indexOf(row)
+          let rowIndex = treeTableData.indexOf(row)
           if (rowIndex === -1) {
             throw new Error('错误的操作！')
           }
@@ -675,23 +675,23 @@ function registerComponent (vxetable: typeof VXETable) {
             }
           }, treeOpts)
           row._X_EXPAND = true
-          tableData.splice.apply(tableData, [rowIndex + 1, 0].concat(expandList))
+          treeTableData.splice.apply(treeTableData, [rowIndex + 1, 0].concat(expandList))
         }
-        return this.tableData
+        return this.treeTableData
       },
       // 收起节点
       handleCollapsing (this: any, row: any) {
         if (hasChilds(this, row)) {
-          const { tableData, treeOpts } = this
+          const { treeTableData, treeOpts } = this
           let childRows = row[treeOpts.children]
           let nodeChildList: any[] = []
           XEUtils.eachTree(childRows, item => {
             nodeChildList.push(item)
           }, treeOpts)
           row._X_EXPAND = false
-          this.tableData = tableData.filter((item: any) => nodeChildList.indexOf(item) === -1)
+          this.treeTableData = treeTableData.filter((item: any) => nodeChildList.indexOf(item) === -1)
         }
-        return this.tableData
+        return this.treeTableData
       },
       /**
        * 展开/收起所有树节点
@@ -704,14 +704,14 @@ function registerComponent (vxetable: typeof VXETable) {
             row._X_EXPAND = expanded
             tableList.push(row)
           }, treeOpts)
-          this.tableData = tableList
+          this.treeTableData = tableList
         } else {
           XEUtils.eachTree(this.fullTreeData, row => {
             row._X_EXPAND = expanded
           }, treeOpts)
-          this.tableData = this.fullTreeData.slice(0)
+          this.treeTableData = this.fullTreeData.slice(0)
         }
-        return this.tableData
+        return this.treeTableData
       },
       checkboxAllEvent (this: any, params: any) {
         const { checkboxOpts, treeOpts } = this
@@ -800,7 +800,6 @@ function registerComponent (vxetable: typeof VXETable) {
  */
 export const VXETablePluginVirtualTree = {
   install (vxetable: typeof VXETable) {
-    // 注册组件
     registerComponent(vxetable)
   }
 }
