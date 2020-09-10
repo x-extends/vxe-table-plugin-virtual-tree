@@ -7,7 +7,7 @@
 [![gzip size: CSS](http://img.badgesize.io/https://unpkg.com/vxe-table-plugin-virtual-tree/dist/style.min.css?compression=gzip&label=gzip%20size:%20CSS)](https://unpkg.com/vxe-table-plugin-virtual-tree/dist/style.min.css)
 [![npm license](https://img.shields.io/github/license/mashape/apistatus.svg)](LICENSE)
 
-基于 [vxe-table](https://www.npmjs.com/package/vxe-table) 表格的增强插件，实现简单的虚拟树表格（属于内测阶段）
+基于 [vxe-table](https://www.npmjs.com/package/vxe-table) 表格的增强插件，实现简单的虚拟树表格（属于内测阶段，谨慎使用）
 
 ## Installing
 
@@ -25,6 +25,9 @@ VXETable.use(VXETablePluginVirtualTree)
 ```
 
 ## Compatibility
+
+* 说明
+  * 虚拟树的实现机制是属于污染式的，会污染数据源（给数据源自动增加额外的属性，用于编译成高性能的虚拟渲染所需要的参数）
 
 * 不支持的参数
   * table.keep-source
