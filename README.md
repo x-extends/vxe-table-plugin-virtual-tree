@@ -26,7 +26,7 @@ VXETable.use(VXETablePluginVirtualTree)
 
 ## Compatibility
 
-* 说明
+* 注意事项
   * 虚拟树的实现机制是属于污染式的，会污染数据源（给数据源自动增加额外的属性，用于编译成高性能的虚拟渲染所需要的参数）
 
 * 不支持的参数
