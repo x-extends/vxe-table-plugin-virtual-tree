@@ -669,11 +669,15 @@ function registerComponent (vxetable: typeof VXETable) {
           if (rowIndex === -1) {
             throw new Error('错误的操作！')
           }
-          XEUtils.eachTree(childRows, (item, index, obj, paths, parent, nodes) => {
-            if (!parent || parent._X_EXPAND) {
-              expandList.push(item)
+          function deepExpandRow(childRows: any) {
+            for (const row of childRows) {
+              expandList.push(row)
+              if (row._X_EXPAND) {
+                deepExpandRow(row[treeOpts.children])
+              }
             }
-          }, treeOpts)
+          }
+          deepExpandRow(childRows)
           row._X_EXPAND = true
           treeTableData.splice.apply(treeTableData, [rowIndex + 1, 0].concat(expandList))
         }
