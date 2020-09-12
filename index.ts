@@ -1,31 +1,37 @@
 /* eslint-disable no-unused-vars */
-import Vue, { CreateElement, VNodeChildren } from 'vue'
+import Vue, { CreateElement, VNodeChildren, VNode } from 'vue'
 import XEUtils from 'xe-utils/ctor'
 import {
-  VXETable
+  VXETable,
+  Table,
+  Grid,
+  RowInfo,
+  ColumnOptions,
+  ColumnCellRenderParams
 } from 'vxe-table/lib/vxe-table'
 /* eslint-enable no-unused-vars */
 
-function hasChilds (_vm: any, row: any) {
+function hasChilds (_vm: VirtualTree, row: RowInfo) {
   const childList = row[_vm.treeOpts.children]
   return childList && childList.length
 }
 
-function renderDefaultForm (h: CreateElement, _vm: any) {
+function renderDefaultForm (h: CreateElement, _vm: VirtualTree) {
   const { proxyConfig, proxyOpts, formData, formConfig, formOpts } = _vm
-  if (formOpts.items && formOpts.items.length) {
+  if (formConfig && formOpts.items && formOpts.items.length) {
     if (!formOpts.inited) {
       formOpts.inited = true
-      if (proxyOpts && proxyOpts.beforeItem) {
+      const beforeItem = proxyOpts.beforeItem
+      if (proxyOpts && beforeItem) {
         formOpts.items.forEach((item: any) => {
-          proxyOpts.beforeItem.apply(_vm, [{ $grid: _vm, item }])
+          beforeItem.call(_vm, { $grid: _vm, item })
         })
       }
     }
     return [
       h('vxe-form', {
         props: Object.assign({}, formOpts, {
-          data: proxyConfig && proxyOpts.form ? formData : formConfig.data
+          data: proxyConfig && proxyOpts.form ? formData : formOpts.data
         }),
         on: {
           submit: _vm.submitEvent,
@@ -40,12 +46,12 @@ function renderDefaultForm (h: CreateElement, _vm: any) {
   return []
 }
 
-function getToolbarSlots (_vm: any) {
+function getToolbarSlots (_vm: VirtualTree) {
   const { $scopedSlots, toolbarOpts } = _vm
   const toolbarOptSlots = toolbarOpts.slots
   let $buttons
   let $tools
-  const slots: any = {}
+  const slots: { [key: string]: any } = {}
   if (toolbarOptSlots) {
     $buttons = toolbarOptSlots.buttons
     $tools = toolbarOptSlots.tools
@@ -65,10 +71,10 @@ function getToolbarSlots (_vm: any) {
   return slots
 }
 
-function getPagerSlots (_vm: any) {
+function getPagerSlots (_vm: VirtualTree) {
   const { $scopedSlots, pagerOpts } = _vm
   const pagerOptSlots = pagerOpts.slots
-  const slots: any = {}
+  const slots: { [key: string]: any } = {}
   let $left
   let $right
   if (pagerOptSlots) {
@@ -90,7 +96,7 @@ function getPagerSlots (_vm: any) {
   return slots
 }
 
-function getTableOns (_vm: any) {
+function getTableOns (_vm: VirtualTree) {
   const { $listeners, proxyConfig, proxyOpts } = _vm
   const ons: { [key: string]: Function } = {}
   XEUtils.each($listeners, (cb, type) => {
@@ -118,19 +124,42 @@ function errorLog (log: string, args?: any) {
 declare module 'vxe-table/lib/vxe-table' {
   interface VXETableStatic {
     Vue: typeof Vue;
-    Grid: any;
-    Table: any;
+    Grid: Grid;
+    Table: Table;
   }
 }
 
-function registerComponent (vxetable: typeof VXETable) {
-  const { Vue, Table, Grid, setup, t } = vxetable
-  const GlobalConfig = setup()
-  const propKeys = Object.keys(Table.props).filter(name => ['data', 'treeConfig'].indexOf(name) === -1)
+interface VirtualTree extends Grid {
+  $refs: {
+    xTable: Table;
+    [key: string]: any;
+  };
+  _loadTreeData(data: RowInfo[]): Promise<any>;
+  handleColumns(columns: ColumnOptions[]): ColumnOptions[];
+  toVirtualTree(treeData: RowInfo[]): RowInfo[];
+  handleExpanding(row: RowInfo): RowInfo[];
+  handleCollapsing(row: RowInfo): RowInfo[];
+  [key: string]: any;
+}
 
-  const VirtualTree: any = {
+interface VirtualTreeOptions {
+  data?: (this: VirtualTree) => any;
+  computed?: { [key: string]: (this: VirtualTree) => any }
+  watch?: { [key: string]: (this: VirtualTree, ...args: any[]) => any }
+  created?: (this: VirtualTree) => any;
+  render?: (this: VirtualTree, h: CreateElement) => VNode;
+  methods?: { [key: string]: (this: VirtualTree, ...args: any[]) => any }
+  [key: string]: any;
+}
+
+function registerComponent (vxetable: typeof VXETable) {
+  const { setup, t } = vxetable
+  const GlobalConfig = setup()
+  const propKeys = Object.keys(vxetable.Table.props).filter(name => ['data', 'treeConfig'].indexOf(name) === -1)
+
+  const options: VirtualTreeOptions = {
     name: 'VxeVirtualTree',
-    extends: Grid,
+    extends: vxetable.Grid,
     data () {
       return {
         removeList: [],
@@ -138,14 +167,14 @@ function registerComponent (vxetable: typeof VXETable) {
       }
     },
     computed: {
-      treeOpts (this: any) {
+      treeOpts () {
         return Object.assign({}, GlobalConfig.table.treeConfig, this.treeConfig)
       },
-      checkboxOpts (this: any) {
+      checkboxOpts () {
         return Object.assign({}, GlobalConfig.table.checkboxConfig, this.checkboxConfig)
       },
-      tableExtendProps (this: any) {
-        let rest: any = {}
+      tableExtendProps () {
+        let rest: { [key: string]: any } = {}
         propKeys.forEach(key => {
           rest[key] = this[key]
         })
@@ -156,15 +185,15 @@ function registerComponent (vxetable: typeof VXETable) {
       }
     },
     watch: {
-      columns (this: any, value: any[]) {
+      columns (value: ColumnOptions[]) {
         this.handleColumns(value)
       },
-      data (this: any, value: any[]) {
+      data (value: any[]) {
         this.loadData(value)
       }
     },
-    created (this: any) {
-      const { $vxe, treeOpts, data } = this
+    created () {
+      const { $vxe, treeOpts, data, columns } = this
       Object.assign(this, {
         fullTreeData: [],
         treeTableData: [],
@@ -177,17 +206,18 @@ function registerComponent (vxetable: typeof VXETable) {
         errorLog($vxe.t('vxe.error.notProp'), ['table.checkbox-config.line'])
         return []
       }
-      this.handleColumns(this.columns)
+      if (columns) {
+        this.handleColumns(columns)
+      }
       if (data) {
         this.reloadData(data)
       }
     },
-    render (this: any, h: CreateElement) {
-      const { $scopedSlots, vSize, isZMax } = this
+    render (h: CreateElement) {
+      const { vSize, isZMax } = this
+      const $scopedSlots: any = this.$scopedSlots
       const hasForm = !!($scopedSlots.form || this.formConfig)
       const hasToolbar = !!($scopedSlots.toolbar || this.toolbar)
-      const hasTop = !!$scopedSlots.top
-      const hasBottom = !!$scopedSlots.bottom
       const hasPager = !!($scopedSlots.pager || this.pagerConfig)
       return h('div', {
         class: ['vxe-grid', 'vxe-virtual-tree', {
@@ -204,7 +234,7 @@ function registerComponent (vxetable: typeof VXETable) {
          */
         hasForm ? h('div', {
           ref: 'formWrapper',
-          class: 'vxe-grid--form-wrapper'
+          staticClass: 'vxe-grid--form-wrapper'
         }, $scopedSlots.form
           ? $scopedSlots.form.call(this, { $grid: this }, h)
           : renderDefaultForm(h, this)
@@ -228,9 +258,9 @@ function registerComponent (vxetable: typeof VXETable) {
         /**
          * 渲染表格顶部区域
          */
-        hasTop ? h('div', {
+        $scopedSlots.top ? h('div', {
           ref: 'topWrapper',
-          class: 'vxe-grid--top-wrapper'
+          staticClass: 'vxe-grid--top-wrapper'
         }, $scopedSlots.top.call(this, { $grid: this }, h)) : null,
         /**
          * 渲染表格
@@ -244,16 +274,16 @@ function registerComponent (vxetable: typeof VXETable) {
         /**
          * 渲染表格底部区域
          */
-        hasBottom ? h('div', {
+        $scopedSlots.bottom ? h('div', {
           ref: 'bottomWrapper',
-          class: 'vxe-grid--bottom-wrapper'
+          staticClass: 'vxe-grid--bottom-wrapper'
         }, $scopedSlots.bottom.call(this, { $grid: this }, h)) : null,
         /**
          * 渲染分页
          */
         hasPager ? h('div', {
           ref: 'pagerWrapper',
-          class: 'vxe-grid--pager-wrapper'
+          staticClass: 'vxe-grid--pager-wrapper'
         }, $scopedSlots.pager
           ? $scopedSlots.pager.call(this, { $grid: this }, h)
           : [
@@ -269,7 +299,7 @@ function registerComponent (vxetable: typeof VXETable) {
       ])
     },
     methods: {
-      loadColumn (this: any, columns: any[]) {
+      loadColumn (columns: ColumnOptions[]) {
         return this.$nextTick().then(() => {
           const { $vxe, $scopedSlots, renderTreeIcon, treeOpts } = this
           XEUtils.eachTree(columns, column => {
@@ -295,7 +325,7 @@ function registerComponent (vxetable: typeof VXETable) {
           this.$refs.xTable.loadColumn(columns)
         })
       },
-      renderTreeIcon (this: any, params: any, h: CreateElement, cellVNodes: VNodeChildren) {
+      renderTreeIcon (params: ColumnCellRenderParams, h: CreateElement, cellVNodes: VNodeChildren) {
         const { treeLazyLoadeds, treeOpts } = this
         let { isHidden, row } = params
         const { children, hasChild, indent, lazy, trigger, iconLoaded, showIcon, iconOpen, iconClose } = treeOpts
@@ -303,7 +333,7 @@ function registerComponent (vxetable: typeof VXETable) {
         let hasLazyChilds = false
         let isAceived = false
         let isLazyLoaded = false
-        let on: any = {}
+        let on: { [key: string]: Function } = {}
         if (!isHidden) {
           isAceived = row._X_EXPAND
           if (lazy) {
@@ -339,7 +369,7 @@ function registerComponent (vxetable: typeof VXETable) {
           ])
         ]
       },
-      _loadTreeData (this: any, data: any) {
+      _loadTreeData (data: RowInfo[]) {
         const selectRow = this.getRadioRecord()
         return this.$nextTick()
           .then(() => this.$refs.xTable.loadData(data))
@@ -349,53 +379,57 @@ function registerComponent (vxetable: typeof VXETable) {
             }
           })
       },
-      loadData (data: any) {
+      loadData (data: any[]) {
         return this._loadTreeData(this.toVirtualTree(data))
       },
-      reloadData (this: any, data: any) {
+      reloadData (data: any[]) {
         return this.$nextTick()
           .then(() => this.$refs.xTable.reloadData(this.toVirtualTree(data)))
           .then(() => this.handleDefaultTreeExpand())
       },
-      isTreeExpandByRow (row: any) {
+      isTreeExpandByRow (row: RowInfo) {
         return !!row._X_EXPAND
       },
-      setTreeExpansion (rows: any, expanded: any) {
+      setTreeExpansion (rows: RowInfo | RowInfo[], expanded: boolean) {
         return this.setTreeExpand(rows, expanded)
       },
-      handleAsyncTreeExpandChilds (this: any, row: any) {
+      handleAsyncTreeExpandChilds (row: RowInfo) {
         const { treeLazyLoadeds, treeOpts, checkboxOpts } = this
         const { loadMethod, children } = treeOpts
         const { checkStrictly } = checkboxOpts
         return new Promise(resolve => {
-          treeLazyLoadeds.push(row)
-          loadMethod({ $table: this, row }).catch(() => []).then((childs: any[]) => {
-            row._X_LOADED = true
-            XEUtils.remove(treeLazyLoadeds, item => item === row)
-            if (!XEUtils.isArray(childs)) {
-              childs = []
-            }
-            if (childs) {
-              row[children] = childs.map(item => {
-                item._X_LOADED = false
-                item._X_EXPAND = false
-                item._X_INSERT = false
-                item._X_LEVEL = row._X_LEVEL + 1
-                return item
-              })
-              if (childs.length && !row._X_EXPAND) {
-                this.virtualExpand(row, true)
+          if (loadMethod) {
+            treeLazyLoadeds.push(row)
+            loadMethod({ row }).catch(() => []).then((childs: any[]) => {
+              row._X_LOADED = true
+              XEUtils.remove(treeLazyLoadeds, item => item === row)
+              if (!XEUtils.isArray(childs)) {
+                childs = []
               }
-              // 如果当前节点已选中，则展开后子节点也被选中
-              if (!checkStrictly && this.isCheckedByCheckboxRow(row)) {
-                this.setCheckboxRow(childs, true)
+              if (childs) {
+                row[children] = childs.map(item => {
+                  item._X_LOADED = false
+                  item._X_EXPAND = false
+                  item._X_INSERT = false
+                  item._X_LEVEL = row._X_LEVEL + 1
+                  return item
+                })
+                if (childs.length && !row._X_EXPAND) {
+                  this.virtualExpand(row, true)
+                }
+                // 如果当前节点已选中，则展开后子节点也被选中
+                if (!checkStrictly && this.isCheckedByCheckboxRow(row)) {
+                  this.setCheckboxRow(childs, true)
+                }
               }
-            }
-            resolve(this.$nextTick().then(this.recalculate))
-          })
+              resolve(this.$nextTick().then(() => this.recalculate()))
+            })
+          } else {
+            resolve()
+          }
         })
       },
-      setTreeExpand (this: any, rows: any, expanded: any) {
+      setTreeExpand (rows: any, expanded: boolean) {
         const { treeLazyLoadeds, treeOpts, tableFullData, treeNodeColumn } = this
         const { lazy, hasChild, accordion, toggleMethod } = treeOpts
         const result: any[] = []
@@ -403,7 +437,9 @@ function registerComponent (vxetable: typeof VXETable) {
           if (!XEUtils.isArray(rows)) {
             rows = [rows]
           }
-          let validRows = toggleMethod ? rows.filter((row: any) => toggleMethod({ expanded, column: treeNodeColumn, row })) : rows
+          const columnIndex = this.getColumnIndex(treeNodeColumn)
+          const $columnIndex = this.$getColumnIndex(treeNodeColumn)
+          let validRows = toggleMethod ? rows.filter((row: RowInfo) => toggleMethod({ expanded, column: treeNodeColumn, row, columnIndex, $columnIndex })) : rows
           if (accordion) {
             validRows = validRows.length ? [validRows[validRows.length - 1]] : []
             // 同一级只能展开一个
@@ -432,16 +468,16 @@ function registerComponent (vxetable: typeof VXETable) {
         }
         return this.$nextTick()
       },
-      setAllTreeExpansion (expanded: any) {
+      setAllTreeExpansion (expanded: boolean) {
         return this.setAllTreeExpand(expanded)
       },
-      setAllTreeExpand (expanded: any) {
+      setAllTreeExpand (expanded: boolean) {
         return this._loadTreeData(this.virtualAllExpand(expanded))
       },
-      toggleTreeExpansion (row: any) {
+      toggleTreeExpansion (row: RowInfo) {
         return this.toggleTreeExpand(row)
       },
-      triggerTreeExpandEvent (this: any, evnt: Event, params: any) {
+      triggerTreeExpandEvent (evnt: Event, params: ColumnCellRenderParams) {
         const { treeOpts, treeLazyLoadeds } = this
         const { row, column } = params
         const { lazy } = treeOpts
@@ -451,13 +487,13 @@ function registerComponent (vxetable: typeof VXETable) {
           this.$emit('toggle-tree-expand', { expanded, column, row, $event: evnt })
         }
       },
-      toggleTreeExpand (row: any) {
+      toggleTreeExpand (row: RowInfo) {
         return this._loadTreeData(this.virtualExpand(row, !row._X_EXPAND))
       },
-      getTreeExpandRecords (this: any) {
-        const { treeOpts } = this
-        const treeExpandRecords: any[] = []
-        XEUtils.eachTree(this.fullTreeData, row => {
+      getTreeExpandRecords () {
+        const { fullTreeData, treeOpts } = this
+        const treeExpandRecords: RowInfo[] = []
+        XEUtils.eachTree(fullTreeData, row => {
           if (row._X_EXPAND && hasChilds(this, row)) {
             treeExpandRecords.push(row)
           }
@@ -467,7 +503,7 @@ function registerComponent (vxetable: typeof VXETable) {
       clearTreeExpand () {
         return this.setAllTreeExpand(false)
       },
-      handleColumns (this: any, columns: any[]) {
+      handleColumns (columns: ColumnOptions[]) {
         const { $vxe, renderTreeIcon, checkboxOpts } = this
         if (columns) {
           if ((!checkboxOpts.checkField || !checkboxOpts.halfField) && columns.some(conf => conf.type === 'checkbox')) {
@@ -475,29 +511,33 @@ function registerComponent (vxetable: typeof VXETable) {
             return []
           }
           const treeNodeColumn = columns.find(conf => conf.treeNode)
-          let slots = treeNodeColumn.slots || {}
-          slots.icon = renderTreeIcon
-          treeNodeColumn.slots = slots
+          if (treeNodeColumn) {
+            let slots = treeNodeColumn.slots || {}
+            slots.icon = renderTreeIcon
+            treeNodeColumn.slots = slots
+            this.treeNodeColumn = treeNodeColumn
+          }
           return columns
         }
         return []
       },
       /**
-       * 获取表格数据集，包含新增、删除、修改
+       * 获取表格数据集，包含新增、删除
+       * 不支持修改
        */
-      getRecordset (this: any) {
+      getRecordset () {
         return {
           insertRecords: this.getInsertRecords(),
           removeRecords: this.getRemoveRecords(),
-          updateRecords: this.getUpdateRecords()
+          updateRecords: []
         }
       },
-      isInsertByRow (row: any) {
+      isInsertByRow (row: RowInfo) {
         return !!row._X_INSERT
       },
-      getInsertRecords (this: any) {
+      getInsertRecords () {
         const { treeOpts } = this
-        const insertRecords: any[] = []
+        const insertRecords: RowInfo[] = []
         XEUtils.eachTree(this.fullTreeData, row => {
           if (row._X_INSERT) {
             insertRecords.push(row)
@@ -505,10 +545,13 @@ function registerComponent (vxetable: typeof VXETable) {
         }, treeOpts)
         return insertRecords
       },
-      insert (this: any, records: any) {
-        return this.insertAt(records)
+      insert (records: RowInfo | RowInfo[]) {
+        return this.insertAt(records, null)
       },
-      insertAt (this: any, records: any, row: any) {
+      /**
+       * 支持任意层级插入与删除
+       */
+      insertAt (records: any, row: number | RowInfo | null) {
         const { fullTreeData, treeTableData, treeOpts } = this
         if (!XEUtils.isArray(records)) {
           records = [records]
@@ -520,23 +563,23 @@ function registerComponent (vxetable: typeof VXETable) {
           _X_LEVEL: 0
         }, record)))
         if (!row) {
-          fullTreeData.unshift.apply(fullTreeData, newRecords)
-          treeTableData.unshift.apply(treeTableData, newRecords)
+          fullTreeData.unshift(...newRecords)
+          treeTableData.unshift(...newRecords)
         } else {
           if (row === -1) {
-            fullTreeData.push.apply(fullTreeData, newRecords)
-            treeTableData.push.apply(treeTableData, newRecords)
+            fullTreeData.push(...newRecords)
+            treeTableData.push(...newRecords)
           } else {
             let matchObj = XEUtils.findTree(fullTreeData, item => item === row, treeOpts)
             if (!matchObj || matchObj.index === -1) {
               throw new Error(t('vxe.error.unableInsert'))
             }
-            let { items, index, nodes }: any = matchObj
+            let { items, index, nodes } = matchObj
             let rowIndex = treeTableData.indexOf(row)
             if (rowIndex > -1) {
-              treeTableData.splice.apply(treeTableData, [rowIndex, 0].concat(newRecords))
+              treeTableData.splice(rowIndex, 0, ...newRecords)
             }
-            items.splice.apply(items, [index, 0].concat(newRecords))
+            items.splice(index, 0, ...newRecords)
             newRecords.forEach((item: any) => {
               item._X_LEVEL = nodes.length - 1
             })
@@ -552,7 +595,7 @@ function registerComponent (vxetable: typeof VXETable) {
       /**
        * 获取已删除的数据
        */
-      getRemoveRecords (this: any) {
+      getRemoveRecords () {
         return this.removeList
       },
       removeSelecteds () {
@@ -561,15 +604,15 @@ function registerComponent (vxetable: typeof VXETable) {
       /**
        * 删除选中数据
        */
-      removeCheckboxRow (this: any) {
-        return this.remove(this.getSelectRecords()).then((params: any) => {
+      removeCheckboxRow () {
+        return this.remove(this.getCheckboxRecords()).then((params: any) => {
           this.clearSelection()
           return params
         })
       },
-      remove (this: any, rows: any[]) {
+      remove (rows: any) {
         const { removeList, fullTreeData, treeOpts } = this
-        let rest: any[] = []
+        let rest: RowInfo[] = []
         if (!rows) {
           rows = fullTreeData
         } else if (!XEUtils.isArray(rows)) {
@@ -606,13 +649,13 @@ function registerComponent (vxetable: typeof VXETable) {
       /**
        * 处理默认展开树节点
        */
-      handleDefaultTreeExpand (this: any) {
+      handleDefaultTreeExpand () {
         let { treeConfig, treeOpts, tableFullData } = this
         if (treeConfig) {
           let { children, expandAll, expandRowKeys } = treeOpts
           if (expandAll) {
             this.setAllTreeExpand(true)
-          } else if (expandRowKeys) {
+          } else if (expandRowKeys && this.rowId) {
             let rowkey = this.rowId
             expandRowKeys.forEach((rowid: any) => {
               let matchObj = XEUtils.findTree(tableFullData, item => rowid === XEUtils.get(item, rowkey), treeOpts)
@@ -627,7 +670,7 @@ function registerComponent (vxetable: typeof VXETable) {
       /**
        * 定义树属性
        */
-      toVirtualTree (this: any, treeData: any[]) {
+      toVirtualTree (treeData: RowInfo[]) {
         const { treeOpts } = this
         let fullTreeRowMap = this.fullTreeRowMap
         fullTreeRowMap.clear()
@@ -645,10 +688,12 @@ function registerComponent (vxetable: typeof VXETable) {
       /**
        * 展开/收起树节点
        */
-      virtualExpand (this: any, row: any, expanded: boolean) {
-        const { treeOpts } = this
+      virtualExpand (row: RowInfo, expanded: boolean) {
+        const { treeOpts, treeNodeColumn } = this
         const { toggleMethod } = treeOpts
-        if (!toggleMethod || toggleMethod({ expanded, row })) {
+        const columnIndex = this.getColumnIndex(treeNodeColumn)
+        const $columnIndex = this.$getColumnIndex(treeNodeColumn)
+        if (!toggleMethod || toggleMethod({ expanded, row, column: treeNodeColumn, columnIndex, $columnIndex })) {
           if (row._X_EXPAND !== expanded) {
             if (row._X_EXPAND) {
               this.handleCollapsing(row)
@@ -660,31 +705,33 @@ function registerComponent (vxetable: typeof VXETable) {
         return this.treeTableData
       },
       // 展开节点
-      handleExpanding (this: any, row: any) {
+      handleExpanding (row: RowInfo) {
         if (hasChilds(this, row)) {
           const { treeTableData, treeOpts } = this
           let childRows = row[treeOpts.children]
-          let expandList: any[] = []
+          let expandList: RowInfo[] = []
           let rowIndex = treeTableData.indexOf(row)
           if (rowIndex === -1) {
-            throw new Error('错误的操作！')
+            throw new Error('Expanding error')
           }
+          const expandMaps: Map<RowInfo, Number> = new Map()
           XEUtils.eachTree(childRows, (item, index, obj, paths, parent, nodes) => {
-            if (!parent || parent._X_EXPAND) {
+            if (!parent || (parent._X_EXPAND && expandMaps.has(parent))) {
+              expandMaps.set(item, 1)
               expandList.push(item)
             }
           }, treeOpts)
           row._X_EXPAND = true
-          treeTableData.splice.apply(treeTableData, [rowIndex + 1, 0].concat(expandList))
+          treeTableData.splice(rowIndex + 1, 0, ...expandList)
         }
         return this.treeTableData
       },
       // 收起节点
-      handleCollapsing (this: any, row: any) {
+      handleCollapsing (row: RowInfo) {
         if (hasChilds(this, row)) {
           const { treeTableData, treeOpts } = this
           let childRows = row[treeOpts.children]
-          let nodeChildList: any[] = []
+          let nodeChildList: RowInfo[] = []
           XEUtils.eachTree(childRows, item => {
             nodeChildList.push(item)
           }, treeOpts)
@@ -696,10 +743,10 @@ function registerComponent (vxetable: typeof VXETable) {
       /**
        * 展开/收起所有树节点
        */
-      virtualAllExpand (this: any, expanded: boolean) {
+      virtualAllExpand (expanded: boolean) {
         const { treeOpts } = this
         if (expanded) {
-          const tableList: any[] = []
+          const tableList: RowInfo[] = []
           XEUtils.eachTree(this.fullTreeData, row => {
             row._X_EXPAND = expanded
             tableList.push(row)
@@ -713,7 +760,7 @@ function registerComponent (vxetable: typeof VXETable) {
         }
         return this.treeTableData
       },
-      checkboxAllEvent (this: any, params: any) {
+      checkboxAllEvent (params: any) {
         const { checkboxOpts, treeOpts } = this
         const { checkField, halfField, checkStrictly } = checkboxOpts
         const { checked } = params
@@ -727,7 +774,7 @@ function registerComponent (vxetable: typeof VXETable) {
         }
         this.$emit('checkbox-all', params)
       },
-      checkboxChangeEvent (this: any, params: any) {
+      checkboxChangeEvent (params: any) {
         const { checkboxOpts, treeOpts } = this
         const { checkField, halfField, checkStrictly } = checkboxOpts
         const { row, checked } = params
@@ -742,17 +789,17 @@ function registerComponent (vxetable: typeof VXETable) {
         }
         this.$emit('checkbox-change', params)
       },
-      checkParentNodeSelection (this: any, row: any) {
+      checkParentNodeSelection (row: RowInfo) {
         const { checkboxOpts, treeOpts } = this
         const { children } = treeOpts
         const { checkField, halfField, checkStrictly } = checkboxOpts
         const matchObj = XEUtils.findTree(this.fullTreeData, item => item === row, treeOpts)
         if (matchObj && checkField && !checkStrictly) {
-          const parentRow = matchObj.parent
+          const parentRow: RowInfo = matchObj.parent
           if (parentRow) {
-            const isAll = parentRow[children].every((item: any) => item[checkField])
+            const isAll = parentRow[children].every((item: RowInfo) => item[checkField])
             if (halfField && !isAll) {
-              parentRow[halfField] = parentRow[children].some((item: any) => item[checkField] || item[halfField])
+              parentRow[halfField] = parentRow[children].some((item: RowInfo) => item[checkField] || item[halfField])
             }
             parentRow[checkField] = isAll
             this.checkParentNodeSelection(parentRow)
@@ -761,11 +808,11 @@ function registerComponent (vxetable: typeof VXETable) {
           }
         }
       },
-      getCheckboxRecords (this: any) {
+      getCheckboxRecords () {
         const { checkboxOpts, treeOpts } = this
         const { checkField } = checkboxOpts
         if (checkField) {
-          const records: any[] = []
+          const records: RowInfo[] = []
           XEUtils.eachTree(this.fullTreeData, row => {
             if (row[checkField]) {
               records.push(row)
@@ -775,11 +822,11 @@ function registerComponent (vxetable: typeof VXETable) {
         }
         return this.$refs.xTable.getCheckboxRecords()
       },
-      getCheckboxIndeterminateRecords (this: any) {
+      getCheckboxIndeterminateRecords () {
         const { checkboxOpts, treeOpts } = this
         const { halfField } = checkboxOpts
         if (halfField) {
-          const records: any[] = []
+          const records: RowInfo[] = []
           XEUtils.eachTree(this.fullTreeData, row => {
             if (row[halfField]) {
               records.push(row)
@@ -792,7 +839,7 @@ function registerComponent (vxetable: typeof VXETable) {
     }
   }
 
-  Vue.component(VirtualTree.name, VirtualTree)
+  vxetable.Vue.component(options.name, options)
 }
 
 /**
