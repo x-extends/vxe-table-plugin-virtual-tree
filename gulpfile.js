@@ -21,10 +21,16 @@ gulp.task('build_style', function () {
       cascade: true,
       remove: true
     }))
+    .pipe(rename({
+      basename: 'style',
+      extname: '.css'
+    }))
     .pipe(gulp.dest('dist'))
     .pipe(cleanCSS())
     .pipe(rename({
-      extname: '.min.css'
+      basename: 'style',
+      suffix: '.min',
+      extname: '.css'
     }))
     .pipe(gulp.dest('dist'))
 })
@@ -44,7 +50,8 @@ gulp.task('build_commonjs', function () {
     }))
     .pipe(rename({
       basename: 'index',
-      extname: '.common.js'
+      suffix: '.common',
+      extname: '.js'
     }))
     .pipe(sourcemaps.write())
     .pipe(gulp.dest('dist'))
@@ -72,10 +79,17 @@ gulp.task('build_umd', function () {
       }]]
     }))
     .pipe(replace(`global.${exportModuleName} = mod.exports;`, `global.${exportModuleName} = mod.exports.default;`))
+    .pipe(rename({
+      basename: 'index',
+      suffix: '.umd',
+      extname: '.js'
+    }))
     .pipe(gulp.dest('dist'))
     .pipe(uglify())
     .pipe(rename({
-      extname: '.min.js'
+      basename: 'index',
+      suffix: '.umd.min',
+      extname: '.js'
     }))
     .pipe(gulp.dest('dist'))
 })

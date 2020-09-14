@@ -200,11 +200,10 @@ function registerComponent (vxetable: typeof VXETable) {
         fullTreeRowMap: new Map()
       })
       if (this.keepSource) {
-        errorLog($vxe.t('vxe.error.notProp'), ['table.keep-source'])
+        errorLog($vxe.t('vxe.error.notProp'), ['keep-source'])
       }
       if (treeOpts.line) {
-        errorLog($vxe.t('vxe.error.notProp'), ['table.checkbox-config.line'])
-        return []
+        errorLog($vxe.t('vxe.error.notProp'), ['checkbox-config.line'])
       }
       if (columns) {
         this.handleColumns(columns)
