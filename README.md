@@ -5,7 +5,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/vxe-table-plugin-virtual-tree.svg?style=flat-square)](http://npm-stat.com/charts.html?package=vxe-table-plugin-virtual-tree)
 [![npm license](https://img.shields.io/github/license/mashape/apistatus.svg)](LICENSE)
 
-基于 [vxe-table](https://www.npmjs.com/package/vxe-table) 表格的增强插件，实现简单的虚拟树表格（属于内测阶段，谨慎使用）
+基于 [vxe-table](https://www.npmjs.com/package/vxe-table) 的表格插件，实现简单的虚拟树表格（属于内测阶段，谨慎使用）
 
 ## Installing
 
