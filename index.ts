@@ -216,7 +216,7 @@ function registerComponent (vxetable: typeof VXETable) {
       const { vSize, isZMax } = this
       const $scopedSlots: any = this.$scopedSlots
       const hasForm = !!($scopedSlots.form || this.formConfig)
-      const hasToolbar = !!($scopedSlots.toolbar || this.toolbar)
+      const hasToolbar = !!($scopedSlots.toolbar || this.toolbarConfig || this.toolbar)
       const hasPager = !!($scopedSlots.pager || this.pagerConfig)
       return h('div', {
         class: ['vxe-grid', 'vxe-virtual-tree', {
@@ -224,7 +224,7 @@ function registerComponent (vxetable: typeof VXETable) {
           't--animat': !!this.animat,
           'is--round': this.round,
           'is--maximize': isZMax,
-          'is--loading': this.isCloak || this.loading || this.tableLoading
+          'is--loading': this.loading || this.tableLoading
         }],
         style: this.renderStyle
       }, [
