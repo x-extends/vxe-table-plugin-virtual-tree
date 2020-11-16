@@ -309,7 +309,7 @@ function registerComponent (vxetable: typeof VXETable) {
               column.slots.icon = renderTreeIcon
             }
             if (column.slots) {
-              XEUtils.each(column.slots, (func, name, slots) => {
+              XEUtils.each(column.slots, (func, name, slots: any) => {
                 if (!XEUtils.isFunction(func)) {
                   if ($scopedSlots[func]) {
                     slots[name] = $scopedSlots[func]
