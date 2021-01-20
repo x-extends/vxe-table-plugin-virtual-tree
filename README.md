@@ -24,6 +24,9 @@ VXETable.use(VXETablePluginVirtualTree)
 
 ## Compatibility
 
+* 功能点
+  * 继承 Grid 基本功能
+
 * 注意事项
   * 虚拟树的实现机制是污染式的，会污染数据源（给数据源自动增加额外的属性，用于编译成高性能的虚拟渲染所需要的参数）
   * 虚拟树的操作同样也是污染式的，通过 insert 或 remove 相关方法也会改变数据源

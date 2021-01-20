@@ -269,7 +269,7 @@ function registerComponent (vxetable: typeof VXETable) {
           on: getTableOns(this),
           scopedSlots: $scopedSlots,
           ref: 'xTable'
-        }, this.$slots.default),
+        }),
         /**
          * 渲染表格底部区域
          */
@@ -424,7 +424,7 @@ function registerComponent (vxetable: typeof VXETable) {
               resolve(this.$nextTick().then(() => this.recalculate()))
             })
           } else {
-            resolve()
+            resolve(null)
           }
         })
       },
