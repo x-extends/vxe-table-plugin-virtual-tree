@@ -437,7 +437,7 @@ function registerComponent (vxetable: typeof VXETable) {
             rows = [rows]
           }
           const columnIndex = this.getColumnIndex(treeNodeColumn)
-          const $columnIndex = this.$getColumnIndex(treeNodeColumn)
+          const $columnIndex = this.getVMColumnIndex(treeNodeColumn)
           let validRows = toggleMethod ? rows.filter((row: RowInfo) => toggleMethod({ expanded, column: treeNodeColumn, row, columnIndex, $columnIndex })) : rows
           if (accordion) {
             validRows = validRows.length ? [validRows[validRows.length - 1]] : []
@@ -691,7 +691,7 @@ function registerComponent (vxetable: typeof VXETable) {
         const { treeOpts, treeNodeColumn } = this
         const { toggleMethod } = treeOpts
         const columnIndex = this.getColumnIndex(treeNodeColumn)
-        const $columnIndex = this.$getColumnIndex(treeNodeColumn)
+        const $columnIndex = this.getVMColumnIndex(treeNodeColumn)
         if (!toggleMethod || toggleMethod({ expanded, row, column: treeNodeColumn, columnIndex, $columnIndex })) {
           if (row._X_EXPAND !== expanded) {
             if (row._X_EXPAND) {
