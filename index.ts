@@ -117,10 +117,6 @@ function getTableOns (_vm: VirtualTree) {
   return ons
 }
 
-function errorLog (log: string, args?: any) {
-  console.error(args ? XEUtils.template(log, args) : log)
-}
-
 declare module 'vxe-table/lib/vxe-table' {
   interface VXETableStatic {
     Vue: typeof Vue;
@@ -200,10 +196,10 @@ function registerComponent (vxetable: typeof VXETable) {
         fullTreeRowMap: new Map()
       })
       if (this.keepSource) {
-        errorLog($vxe.t('vxe.error.notProp'), ['keep-source'])
+        console.error($vxe.t('vxe.error.notProp', ['keep-source']))
       }
       if (treeOpts.line) {
-        errorLog($vxe.t('vxe.error.notProp'), ['checkbox-config.line'])
+        console.error($vxe.t('vxe.error.notProp', ['checkbox-config.line']))
       }
       if (columns) {
         this.handleColumns(columns)
@@ -309,13 +305,10 @@ function registerComponent (vxetable: typeof VXETable) {
               column.slots.icon = renderTreeIcon
             }
             if (column.slots) {
-              XEUtils.each(column.slots, (func, name, slots: any) => {
+              XEUtils.each(column.slots, (func) => {
                 if (!XEUtils.isFunction(func)) {
-                  if ($scopedSlots[func]) {
-                    slots[name] = $scopedSlots[func]
-                  } else {
-                    slots[name] = null
-                    errorLog($vxe.t('vxe.error.notSlot'), [func])
+                  if (!$scopedSlots[func]) {
+                    console.error($vxe.t('vxe.error.notSlot', [func]))
                   }
                 }
               })
@@ -506,7 +499,7 @@ function registerComponent (vxetable: typeof VXETable) {
         const { $vxe, renderTreeIcon, checkboxOpts } = this
         if (columns) {
           if ((!checkboxOpts.checkField || !checkboxOpts.halfField) && columns.some(conf => conf.type === 'checkbox')) {
-            errorLog($vxe.t('vxe.error.reqProp'), ['table.checkbox-config.checkField | table.checkbox-config.halfField'])
+            console.error($vxe.t('vxe.error.reqProp', ['table.checkbox-config.checkField | table.checkbox-config.halfField']))
             return []
           }
           const treeNodeColumn = columns.find(conf => conf.treeNode)
