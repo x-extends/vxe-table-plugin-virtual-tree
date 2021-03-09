@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import Vue, { CreateElement, VNodeChildren, VNode } from 'vue'
 import XEUtils from 'xe-utils/ctor'
 import {
@@ -9,7 +8,6 @@ import {
   ColumnOptions,
   ColumnCellRenderParams
 } from 'vxe-table/lib/vxe-table'
-/* eslint-enable no-unused-vars */
 
 function hasChilds (_vm: VirtualTree, row: RowInfo) {
   const childList = row[_vm.treeOpts.children]
@@ -305,9 +303,13 @@ function registerComponent (vxetable: typeof VXETable) {
               column.slots.icon = renderTreeIcon
             }
             if (column.slots) {
-              XEUtils.each(column.slots, (func) => {
+              XEUtils.each(column.slots, (func, name, colSlots: any) => {
+                // 兼容 v2
                 if (!XEUtils.isFunction(func)) {
-                  if (!$scopedSlots[func]) {
+                  if ($scopedSlots[func]) {
+                    colSlots[name] = $scopedSlots[func]
+                  } else {
+                    colSlots[name] = null
                     console.error($vxe.t('vxe.error.notSlot', [func]))
                   }
                 }
