@@ -1,5 +1,5 @@
 import Vue, { CreateElement, VNodeChildren, VNode } from 'vue'
-import XEUtils from 'xe-utils/ctor'
+import XEUtils from 'xe-utils'
 import {
   VXETable,
   Table,
