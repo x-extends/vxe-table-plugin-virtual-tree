@@ -845,7 +845,7 @@ export const VXETablePluginVirtualTree = {
   }
 }
 
-if (typeof window !== 'undefined' && window.VXETable && window.VXETable.Table) {
+if (typeof window !== 'undefined' && window.VXETable && window.VXETable.use) {
   window.VXETable.use(VXETablePluginVirtualTree)
 }
 
