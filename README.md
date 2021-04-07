@@ -47,6 +47,7 @@ VXETable.use(VXETablePluginVirtualTree)
 <vxe-virtual-tree
   show-overflow
   row-key
+  height="300"
   row-id="id"
   :data="tableData"
   :tree-config="{children: 'children'}"
