@@ -149,11 +149,11 @@ interface VirtualTreeOptions {
 function registerComponent (vxetable: typeof VXETable) {
   const { setup, t } = vxetable
   const GlobalConfig = setup({})
-  const propKeys = Object.keys(vxetable.Table.props).filter(name => ['data', 'treeConfig'].indexOf(name) === -1)
+  const propKeys = Object.keys((Table as any).props).filter(name => ['data', 'treeConfig'].indexOf(name) === -1)
 
   const options: VirtualTreeOptions = {
     name: 'VxeVirtualTree',
-    extends: vxetable.Grid,
+    extends: Grid,
     data () {
       return {
         removeList: [],
