@@ -147,7 +147,7 @@ interface VirtualTreeOptions {
 }
 
 function registerComponent (vxetable: typeof VXETable) {
-  const { setup, t } = vxetable
+  const { setup, t, Grid, Table } = vxetable
   const GlobalConfig = setup({})
   const propKeys = Object.keys((Table as any).props).filter(name => ['data', 'treeConfig'].indexOf(name) === -1)
 
