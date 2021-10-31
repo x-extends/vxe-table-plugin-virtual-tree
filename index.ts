@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import Vue, { CreateElement, VNodeChildren, VNode } from 'vue'
-import XEUtils from 'xe-utils/ctor'
+import XEUtils from 'xe-utils'
 import {
   VXETable,
   Table,
@@ -8,7 +8,7 @@ import {
   RowInfo,
   ColumnOptions,
   ColumnCellRenderParams
-} from 'vxe-table/lib/vxe-table'
+} from 'vxe-table'
 /* eslint-enable no-unused-vars */
 
 function hasChilds (_vm: VirtualTree, row: RowInfo) {
@@ -437,7 +437,7 @@ function registerComponent (vxetable: typeof VXETable) {
             rows = [rows]
           }
           const columnIndex = this.getColumnIndex(treeNodeColumn)
-          const $columnIndex = this.$getColumnIndex(treeNodeColumn)
+          const $columnIndex = this.getVMColumnIndex(treeNodeColumn)
           let validRows = toggleMethod ? rows.filter((row: RowInfo) => toggleMethod({ expanded, column: treeNodeColumn, row, columnIndex, $columnIndex })) : rows
           if (accordion) {
             validRows = validRows.length ? [validRows[validRows.length - 1]] : []
@@ -691,7 +691,7 @@ function registerComponent (vxetable: typeof VXETable) {
         const { treeOpts, treeNodeColumn } = this
         const { toggleMethod } = treeOpts
         const columnIndex = this.getColumnIndex(treeNodeColumn)
-        const $columnIndex = this.$getColumnIndex(treeNodeColumn)
+        const $columnIndex = this.getVMColumnIndex(treeNodeColumn)
         if (!toggleMethod || toggleMethod({ expanded, row, column: treeNodeColumn, columnIndex, $columnIndex })) {
           if (row._X_EXPAND !== expanded) {
             if (row._X_EXPAND) {
@@ -850,7 +850,7 @@ export const VXETablePluginVirtualTree = {
   }
 }
 
-if (typeof window !== 'undefined' && window.VXETable && window.VXETable.Table) {
+if (typeof window !== 'undefined' && window.VXETable && window.VXETable.use) {
   window.VXETable.use(VXETablePluginVirtualTree)
 }
 

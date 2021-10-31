@@ -1,6 +1,6 @@
-# vxe-table-plugin-virtual-tree
+# vxe-table-plugin-virtual-tree 由于 vxe-table 已经支持虚拟树，该插件将不再维护了
 
-[![gitee star](https://gitee.com/xuliangzhan_admin/vxe-table-plugin-virtual-tree/badge/star.svg?theme=dark)](https://gitee.com/xuliangzhan_admin/vxe-table-plugin-virtual-tree/stargazers)
+[![gitee star](https://gitee.com/x-extends/vxe-table-plugin-virtual-tree/badge/star.svg?theme=dark)](https://gitee.com/x-extends/vxe-table-plugin-virtual-tree/stargazers)
 [![npm version](https://img.shields.io/npm/v/vxe-table-plugin-virtual-tree.svg?style=flat-square)](https://www.npmjs.com/package/vxe-table-plugin-virtual-tree)
 [![npm downloads](https://img.shields.io/npm/dm/vxe-table-plugin-virtual-tree.svg?style=flat-square)](http://npm-stat.com/charts.html?package=vxe-table-plugin-virtual-tree)
 [![npm license](https://img.shields.io/github/license/mashape/apistatus.svg)](LICENSE)
@@ -24,6 +24,9 @@ VXETable.use(VXETablePluginVirtualTree)
 
 ## Compatibility
 
+* 功能点
+  * 继承 Grid 基本功能
+
 * 注意事项
   * 虚拟树的实现机制是污染式的，会污染数据源（给数据源自动增加额外的属性，用于编译成高性能的虚拟渲染所需要的参数）
   * 虚拟树的操作同样也是污染式的，通过 insert 或 remove 相关方法也会改变数据源
@@ -43,6 +46,7 @@ VXETable.use(VXETablePluginVirtualTree)
 <vxe-virtual-tree
   show-overflow
   row-key
+  height="300"
   row-id="id"
   :data="tableData"
   :tree-config="{children: 'children'}"
