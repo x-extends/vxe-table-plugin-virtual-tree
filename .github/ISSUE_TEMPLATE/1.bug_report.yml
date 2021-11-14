@@ -6,5 +6,5 @@ body:
 - type: markdown
   attributes:
     value: "Bugs are a bummer!"
-    description: 'For example: 10.0.1'
+
 
