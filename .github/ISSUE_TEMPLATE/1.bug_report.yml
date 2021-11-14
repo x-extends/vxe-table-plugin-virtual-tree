@@ -11,5 +11,5 @@ body:
     label: "What's wrong?"
 - type: markdown
   attributes:
-    value: "Bugs are a bummer!"
+    label: "Bugs are a bummer!"
  
