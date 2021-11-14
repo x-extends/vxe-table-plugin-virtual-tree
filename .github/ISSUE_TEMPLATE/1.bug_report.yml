@@ -17,7 +17,7 @@ body:
   id: issue_link
   attributes:
     label: "可复现的演示链接："
-    placeholder: "重现必须是可运行的，一个最小化的重现能让我们精确地定位 bug 从而快速解决问题"
+    placeholder: "一个最小化的重现能让我们精确地定位 bug 从而快速解决问题"
   validations:
     required: true
 - type: input
