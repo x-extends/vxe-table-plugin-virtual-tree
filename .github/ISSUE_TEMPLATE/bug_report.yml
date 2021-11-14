@@ -1,5 +1,5 @@
-name: Bug report2
-description: "反馈问题"
+name: Bug report
+description: 反馈问题
 labels: bug
 body:
 - type: input
