@@ -13,7 +13,7 @@ body:
     required: true
 - type: markdown
   attributes:
-    value: "问题描述与相关截图"
+    value: "xx"
 - type: textarea
   attributes:
-    label: "What's wrong?"
+    label: "问题描述与相关截图"
