@@ -6,8 +6,5 @@ body:
 - type: markdown
   attributes:
     value: "Bugs are a bummer!"
-- type: textarea
-  attributes:
-    label: "What's wrong?"
-   validations:
-     required: true
+    description: 'For example: 10.0.1'
+
