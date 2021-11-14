@@ -18,7 +18,7 @@ body:
     required: true
 - type: markdown
   attributes:
-    value: "在发布问题之前，仔细阅读你已经写下来的步骤，以确保提供的步骤是详细和清晰的。"
+    value: "在发布问题之前，请仔细阅读所填写的步骤，以确保是详细和清晰的"
 - type: input
   id: issue_expect_version
   attributes:
