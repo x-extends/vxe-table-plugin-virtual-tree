@@ -24,4 +24,4 @@ body:
     label: "是否已有其他不错的替代方案："
 - type: markdown
   attributes:
-    value: "描述一下希望该功能如何调用"
+    value: "如果有其他已实现的方案，可以通过链接或截图描述一下"
