@@ -6,9 +6,9 @@ body:
 - type: input
   id: prevalence
   attributes:
-    label: 请填在线链接
-    description: "How often do you or others encounter this bug?"
-    placeholder: "Whenever I visit the user account page (1-2 times a week)"
+    label: 请填在线链接：
+    description: "重现必须是可运行的，尽量精简可复现问题的代码段，一个最小化的重现能让我们精确地定位 bug 从而快速解决问题！"
+    placeholder: "请输入有效在线演示链接"
   validations:
     required: true
 - type: markdown
