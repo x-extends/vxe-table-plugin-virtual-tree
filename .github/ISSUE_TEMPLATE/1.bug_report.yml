@@ -1,6 +1,5 @@
 name: Bug report2
 description: "反馈问题"
-title: fhgfhgfh
 labels: bug
 body:
 - type: input
