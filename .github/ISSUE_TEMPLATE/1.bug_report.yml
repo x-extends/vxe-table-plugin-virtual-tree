@@ -10,6 +10,5 @@ body:
 - type: textarea
   attributes:
     label: "What's wrong?"
-    description: 'For example: 10.0.1'
    validations:
      required: true
