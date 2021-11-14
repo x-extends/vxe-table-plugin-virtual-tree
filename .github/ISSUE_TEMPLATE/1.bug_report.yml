@@ -25,5 +25,10 @@ body:
   attributes:
     label: "期望的结果："
 - type: input
+  id: os
+  attributes:
+    label: "操作系统："
+- type: input
+  id: browser
   attributes:
     label: "浏览器版本："
