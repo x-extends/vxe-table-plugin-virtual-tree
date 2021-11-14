@@ -23,3 +23,5 @@ body:
   attributes:
     label: "是否已有其他不错的替代方案："
 - type: markdown
+  attributes:
+    value: "描述一下希望该功能如何调用"
