@@ -7,7 +7,7 @@ body:
   id: issue_link
   attributes:
     label: "可复现的链接："
-    description: "详细操作步骤描述(sdf)[https://dsf]"
+    description: 详细操作步骤描述 (sdf)[https://dsf]
     placeholder: "一个最小化的重现能让我们精确地定位 bug 从而快速解决问题"
   validations:
     required: true
