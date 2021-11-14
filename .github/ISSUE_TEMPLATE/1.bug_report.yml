@@ -9,7 +9,9 @@ body:
 - type: textarea
   attributes:
     label: "What's wrong?"
+    description: "How do you trigger this bug? Please walk us through it step by step."
+    value: "dsf"
 - type: markdown
   attributes:
-    label: "Bugs are a bummer!"
+    value: "Bugs are a bummer!"
  
