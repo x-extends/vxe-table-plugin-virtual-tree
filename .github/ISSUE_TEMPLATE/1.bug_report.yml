@@ -3,6 +3,10 @@ description: sdfdsfdsf
 title: fhgfhgfh
 labels: bug
 body:
+- type: markdown
+  attributes:
+    value: |
+      Thanks for taking the time to fill out this bug report!
 - type: textarea
   id: issue_describe
   attributes:
@@ -10,10 +14,6 @@ body:
     description: "详细操作步骤描述"
   validations:
     required: true
-- type: markdown
-  attributes:
-    value: |
-      Thanks for taking the time to fill out this bug report!
 - type: input
   id: issue_link
   attributes:
