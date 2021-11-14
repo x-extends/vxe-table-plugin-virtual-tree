@@ -13,7 +13,7 @@ body:
 - type: textarea
   id: issue_describe
   attributes:
-    label: "问题描述或相关截图："
+    label: "问题描述与截图："
   validations:
     required: true
 - type: markdown
