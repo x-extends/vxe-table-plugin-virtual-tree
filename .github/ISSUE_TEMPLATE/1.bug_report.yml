@@ -11,6 +11,4 @@ body:
 - type: markdown
   attributes:
     value: "请填写问题描述或截图"
-- type: textarea
-  attributes:
     label: "What's wrong?"
