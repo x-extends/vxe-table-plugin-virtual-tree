@@ -7,7 +7,7 @@ body:
   id: issue_link
   attributes:
     label: "可复现的链接："
-    description: "如何创建在线链接，点击 [codesandbox V3](https://codesandbox.io/s/vue-template-916h0)、[jsrun V3](https://jsrun.net/vIyKp/edit) ，然后 fork"
+    description: "如何创建在线链接，点击 V3：[codesandbox](https://codesandbox.io/s/vue-template-916h0)、[jsrun](https://jsrun.net/vIyKp/edit) 或 V4：[codesandbox](https://codesandbox.io/s/vxe-table-wentiyanshi-forked-54v2j)、[jsrun](https://jsrun.net/K5IKp/edit)，然后 fork"
     placeholder: "一个最小化的重现能让我们精确地定位 bug 从而快速解决问题"
   validations:
     required: true
