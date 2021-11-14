@@ -16,4 +16,4 @@ body:
     value: "其他"
 - type: textarea
   attributes:
-    label: "What's wrong?"
+    label: "好What's wrong?"
