@@ -6,7 +6,6 @@ body:
 - type: markdown
   attributes:
     value: "Bugs are a bummer!"
-    description: 'sdfsdfdsf dsg'
 - type: textarea
   attributes:
     label: "What's wrong?"
