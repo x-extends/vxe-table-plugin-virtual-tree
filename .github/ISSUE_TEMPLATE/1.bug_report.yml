@@ -6,7 +6,7 @@ body:
 - type: input
   id: prevalence
   attributes:
-    label: 可复现的演示链接：
+    label: "可复现的演示链接："
     description: "重现必须是可运行的，尽量精简可复现问题的代码段，一个最小化的重现能让我们精确地定位 bug 从而快速解决问题！"
     placeholder: "请输入有效在线演示链接"
   validations:
@@ -16,4 +16,4 @@ body:
     value: "其他"
 - type: textarea
   attributes:
-    label: "问题描述与相关截图What's wrong?"
+    label: "问题描述与相关截图："
