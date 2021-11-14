@@ -1,5 +1,5 @@
 name: Bug report2
-description: "反馈问题：请将问题的重现步骤描述清楚！"
+description: "反馈问题"
 title: fhgfhgfh
 labels: bug
 body:
@@ -8,7 +8,7 @@ body:
   attributes:
     label: "可复现的链接："
     description: "如何创建在线链接，点击 v3：[codesandbox](https://codesandbox.io/s/vue-template-916h0)、[jsrun](https://jsrun.net/vIyKp/edit) 或 v4：[codesandbox](https://codesandbox.io/s/vxe-table-wentiyanshi-forked-54v2j)、[jsrun](https://jsrun.net/K5IKp/edit)，然后 fork"
-    placeholder: "一个最小化的重现能让我们精确地定位 bug 从而快速解决问题"
+    placeholder: "一个最小化的重现能让我们精确地定位问题，从而快速解决问题"
   validations:
     required: true
 - type: textarea
