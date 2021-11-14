@@ -8,6 +8,8 @@ body:
   attributes:
     label: "问题描述或相关截图："
     description: "详细操作步骤描述"
+  validations:
+    required: true
 - type: markdown
   attributes:
     value: |
@@ -29,8 +31,12 @@ body:
   attributes:
     label: "操作系统："
     placeholder: "例如：window10"
+  validations:
+    required: true
 - type: input
   id: browser
   attributes:
     label: "浏览器版本："
     placeholder: "例如：chrome 95.0.4638.69"
+  validations:
+    required: true
