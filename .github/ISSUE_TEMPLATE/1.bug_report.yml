@@ -11,9 +11,9 @@ body:
     placeholder: "请输入有效在线演示链接"
   validations:
     required: true
+- type: textarea
+  attributes:
+    label: "可复现演示链d接："
 - type: markdown
   attributes:
     value: "其他"
-- type: textarea
-  attributes:
-    label: "可复现演示链接："
