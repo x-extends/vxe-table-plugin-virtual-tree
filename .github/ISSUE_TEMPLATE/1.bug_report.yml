@@ -3,9 +3,15 @@ description: sdfdsfdsf
 title: fhgfhgfh
 labels: bug
 body:
+- type: input
+  attributes:
+    label: Last name
 - type: textarea
   attributes:
     label: "What's wrong?"
 - type: markdown
   attributes:
     value: "Bugs are a bummer!"
+- type: input
+  attributes:
+    label: Last name
