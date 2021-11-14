@@ -21,6 +21,9 @@ body:
   validations:
     required: true
 - type: input
-  id: link
+  id: expectation
   attributes:
     label: "期望的结果："
+- type: input
+  attributes:
+    label: "浏览器版本："
