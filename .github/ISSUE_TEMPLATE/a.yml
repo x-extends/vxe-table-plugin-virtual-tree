@@ -1,0 +1,27 @@
+name: Feature request
+about: 功能需求
+labels: enhancement
+body:
+- type: textarea
+  id: issue_describe
+  attributes:
+    label: "这个需求解决了什么问题："
+  validations:
+    required: true
+- type: markdown
+  attributes:
+    value: "请先查看最新文档，确定该功能是否已有实现"
+- type: textarea
+  id: issue_describe
+  attributes:
+    label: "建议的 API 是什么样的："
+- type: markdown
+  attributes:
+    value: "描述一下希望该功能如何调用"
+- type: textarea
+  id: issue_describe
+  attributes:
+    label: "是否已有其他不错的替代方案："
+- type: markdown
+  attributes:
+    value: "是否已有其他方案可以实现该功能"
