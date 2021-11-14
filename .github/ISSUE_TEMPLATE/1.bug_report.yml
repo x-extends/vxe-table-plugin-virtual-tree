@@ -3,11 +3,10 @@ description: sdfdsfdsf
 title: fhgfhgfh
 labels: bug
 body:
-- type: input
-  attributes:
-    label: 请填在线链接
-  validations:
-    required: true
+
 - type: markdown
   attributes:
     value: "请填写问题描述或截图"
+- type: textarea
+  attributes:
+    label: "What's wrong?"
