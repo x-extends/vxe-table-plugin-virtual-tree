@@ -40,3 +40,17 @@ body:
     placeholder: "例如：chrome 95.0.4638.69"
   validations:
     required: true
+- type: input
+  id: browser
+  attributes:
+    label: "vue 版本："
+    placeholder: "例如：2.6.0"
+  validations:
+    required: true
+- type: input
+  id: browser
+  attributes:
+    label: "vxe-table 版本："
+    placeholder: "例如：3.4.0"
+  validations:
+    required: true
