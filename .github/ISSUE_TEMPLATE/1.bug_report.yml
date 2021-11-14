@@ -7,10 +7,10 @@ body:
   id: describe
   attributes:
     label: "问题描述或相关截图："
-    description: "请将详细操作步骤描述清楚"
+    description: "详细操作步骤描述"
 - type: markdown
   attributes:
-    value: "问题描述或相关截图："
+    value: ""
 - type: input
   id: link
   attributes:
