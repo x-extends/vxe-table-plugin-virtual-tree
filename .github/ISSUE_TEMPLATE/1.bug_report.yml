@@ -16,4 +16,4 @@ body:
     value: "其他"
 - type: textarea
   attributes:
-    label: "可复现的演示链接："
+    label: "可复现演示链接："
