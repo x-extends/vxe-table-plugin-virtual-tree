@@ -16,4 +16,4 @@ body:
     value: "其他"
 - type: textarea
   attributes:
-    label: "%u95EE%u9898%u63CF%u8FF0%u4E0E%u76F8%u5173%u622A%u56FE"
+    label: "\95EE\9898%u63CF%u8FF0%u4E0E%u76F8%u5173%u622A%u56FE"
