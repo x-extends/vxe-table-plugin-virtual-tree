@@ -2,9 +2,8 @@ name: Bug Report
 description: Create a bug report for the Next.js core
 labels: 'template: bug'
 body:
-  - type: input
-    attributes:
-      value: Thanks for taking the time to file a bug report! Please fill out this form as completely as possible.
-  - type: markdown
-    attributes:
-      value: If you leave out sections there is a high likelihood it will be moved to the GitHub Discussions "Help" section.
+- type: markdown
+  attributes:
+    value: "Thanks for taking the time to fill out this bug! If you need real-time help, join us on Discord."
+    preview_only: false
+- type: markdown
