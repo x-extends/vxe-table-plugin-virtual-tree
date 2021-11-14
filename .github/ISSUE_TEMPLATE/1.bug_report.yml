@@ -1,4 +1,7 @@
-name: "Bug 11"
+name: "bug213123"
+about: "12323"
+title: "fhgfhgfh"
+labels: "bug"
 body:
 - type: markdown
   attributes:
