@@ -1,5 +1,5 @@
 name: Feature request
-about: 功能需求
+description: 功能需求
 labels: enhancement
 body:
 - type: textarea
