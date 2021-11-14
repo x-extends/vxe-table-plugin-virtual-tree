@@ -3,6 +3,13 @@ description: sdfdsfdsf
 title: fhgfhgfh
 labels: bug
 body:
+- type: input
+  id: issue_link
+  attributes:
+    label: "可复现的链接："
+    placeholder: "一个最小化的重现能让我们精确地定位 bug 从而快速解决问题"
+  validations:
+    required: true
 - type: textarea
   id: issue_describe
   attributes:
@@ -13,13 +20,6 @@ body:
 - type: markdown
   attributes:
     value: "在发布问题之前，仔细阅读你已经写下来的步骤，以确保提供的步骤是详细和清晰的。"
-- type: input
-  id: issue_link
-  attributes:
-    label: "可复现的链接："
-    placeholder: "一个最小化的重现能让我们精确地定位 bug 从而快速解决问题"
-  validations:
-    required: true
 - type: input
   id: issue_expect_version
   attributes:
