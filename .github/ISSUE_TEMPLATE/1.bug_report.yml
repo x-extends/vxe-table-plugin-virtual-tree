@@ -12,15 +12,3 @@ body:
 - type: markdown
   attributes:
     value: "请填写期望的结果"
-- type: input
-  attributes:
-    label: "OS"
-- type: input
-  attributes:
-    label: "Browser"
-- type: input
-  attributes:
-    label: "vue"
-- type: input
-  attributes:
-    label: "vxe-table"
