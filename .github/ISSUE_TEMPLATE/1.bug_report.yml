@@ -9,8 +9,7 @@ body:
     label: "问题描述或相关截图："
     description: "详细操作步骤描述"
 - type: markdown
-  attributes:
-    value: ""
+   value: "gh"
 - type: input
   id: link
   attributes:
