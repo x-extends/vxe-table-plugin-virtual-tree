@@ -28,7 +28,9 @@ body:
   id: os
   attributes:
     label: "操作系统："
+    placeholder: "例如：window10"
 - type: input
   id: browser
   attributes:
     label: "浏览器版本："
+    placeholder: "例如：chrome 95.0.4638.69"
