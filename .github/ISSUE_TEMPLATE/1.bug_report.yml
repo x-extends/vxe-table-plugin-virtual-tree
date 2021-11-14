@@ -5,22 +5,22 @@ labels: bug
 body:
 - type: input
   attributes:
-    label: 请填在线链接
+    label: "请填在线链接"
 - type: markdown
   attributes:
-    value: 请填写问题描述或截图
+    value: "请填写问题描述或截图"
 - type: markdown
   attributes:
-    value: 请填写期望的结果
+    value: "请填写期望的结果"
 - type: input
   attributes:
-    label: OS
+    label: "OS"
 - type: input
   attributes:
-    label: Browser
+    label: "Browser"
 - type: input
   attributes:
-    label: vue
+    label: "vue"
 - type: input
   attributes:
-    label: vxe-table
+    label: "vxe-table"
