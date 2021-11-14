@@ -4,7 +4,7 @@ title: fhgfhgfh
 labels: bug
 body:
 - type: textarea
-  id: describe
+  id: issue_describe
   attributes:
     label: "问题描述或相关截图："
     description: "详细操作步骤描述"
@@ -15,7 +15,7 @@ body:
     value: |
       Thanks for taking the time to fill out this bug report!
 - type: input
-  id: link
+  id: issue_link
   attributes:
     label: "可复现的演示链接："
     description: "重现必须是可运行的，尽量精简可复现问题的代码段，一个最小化的重现能让我们精确地定位 bug 从而快速解决问题！"
@@ -23,25 +23,25 @@ body:
   validations:
     required: true
 - type: input
-  id: expectation
+  id: issue_expect_version
   attributes:
     label: "期望的结果："
 - type: input
-  id: os
+  id: issue_os_version
   attributes:
     label: "操作系统："
     placeholder: "例如：window10"
   validations:
     required: true
 - type: input
-  id: browser
+  id: issue_vue_version
   attributes:
     label: "浏览器版本："
     placeholder: "例如：chrome 95.0.4638.69"
   validations:
     required: true
 - type: input
-  id: browser
+  id: issue_vxe_version
   attributes:
     label: "vue 版本："
     placeholder: "例如：2.6.0"
